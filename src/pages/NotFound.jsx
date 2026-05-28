@@ -1,14 +1,20 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../store/authStore';
 
-const NotFound = () => (
-  <main className="auth-screen">
-    <section className="auth-card">
-      <span className="eyebrow">404</span>
-      <h1>Lost in the reverb.</h1>
-      <p>This route is not on the setlist.</p>
-      <Link className="primary-button" to="/">Back home</Link>
-    </section>
-  </main>
-);
+const NotFound = () => {
+  const { isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    } else {
+      navigate('/login', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  return null;
+};
 
 export default NotFound;

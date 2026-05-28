@@ -1,4 +1,5 @@
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL 
+const apiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL || 'https://ragas-backend-api.onrender.com/api';
 const staticBaseUrl = apiBaseUrl.replace('/api', '');
 
 export const unwrap = (response) => response.data?.data ?? response.data;

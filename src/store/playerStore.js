@@ -31,7 +31,8 @@ const usePlayerStore = create((set, get) => ({
     const list = songList.length > 0 ? songList : [song];
     const index = list.findIndex((s) => s.id === song.id);
 
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
+    const apiBaseUrl =
+      import.meta.env.VITE_API_BASE_URL || 'https://ragas-backend-api.onrender.com/api';
     const baseUrl = apiBaseUrl.replace('/api', '');
     const audioSrc = song.audioUrl?.startsWith('http') ? song.audioUrl : `${baseUrl}${song.audioUrl}`;
 
