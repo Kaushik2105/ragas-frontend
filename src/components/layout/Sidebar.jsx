@@ -1,5 +1,6 @@
-import { Home, ListMusic, LogOut, Music, Search, Star, User, LayoutDashboard, Mic2, Users, MessageSquare } from 'lucide-react';
+import { Home, ListMusic, LogOut, Music, Search, Star, User, LayoutDashboard, Mic2, Users, MessageSquare, X } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import AppLogo from '../common/AppLogo';
 import useAuthStore from '../../store/authStore';
 import useUIStore from '../../store/uiStore';
 
@@ -12,11 +13,10 @@ const Sidebar = () => {
     <nav className={`sidebar${sidebarOpen ? ' open' : ''}`}>
       <div className="brand-row">
         <NavLink className="brand" to="/">
-          <span className="brand-mark"><Music size={20} /></span>
-          <span>RAGAS</span>
+          <AppLogo />
         </NavLink>
         <button className="ghost-button mobile-only" type="button" onClick={toggleSidebar} aria-label="Toggle menu">
-          <Music size={20} />
+          <X size={20} />
         </button>
       </div>
 
@@ -50,6 +50,9 @@ const Sidebar = () => {
           </NavLink>
           <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/playlists" onClick={() => sidebarOpen && toggleSidebar()}>
             <ListMusic size={18} /> Playlists
+          </NavLink>
+          <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/feedback" onClick={() => sidebarOpen && toggleSidebar()}>
+            <MessageSquare size={18} /> Feedback
           </NavLink>
         </div>
       )}

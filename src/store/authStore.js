@@ -16,7 +16,7 @@ const useAuthStore = create((set) => ({
         localStorage.setItem('user', JSON.stringify(data.data.user));
         sessionStorage.removeItem('hasSeenWelcome');
         set({ user: data.data.user, isAuthenticated: true, isLoading: false });
-        return { success: true };
+        return { success: true, user: data.data.user };
       }
     } catch (error) {
       const message =

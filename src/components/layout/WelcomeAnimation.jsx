@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react';
+import AppLogo from '../common/AppLogo';
 
 const WelcomeAnimation = () => {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(() => !sessionStorage.getItem('hasSeenWelcome'));
 
   useEffect(() => {
-    // Show only once per browser session for premium UX
-    const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
-    if (!hasSeenWelcome) {
-      setShow(true);
+    if (show) {
       sessionStorage.setItem('hasSeenWelcome', 'true');
       const timer = setTimeout(() => setShow(false), 2600);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [show]);
 
   if (!show) return null;
 
@@ -20,21 +18,24 @@ const WelcomeAnimation = () => {
     <div className="welcome-animation-overlay">
       <div className="welcome-animation-content">
         <div className="hologram-visualizer">
-          {/* Neon pulsating rings representing audio waves */}
           <div className="soundwave-ring ring-1"></div>
           <div className="soundwave-ring ring-2"></div>
           <div className="soundwave-ring ring-3"></div>
 
-          {/* Premium holographic vinyl record */}
-          <div className="vinyl-record">
-            <div className="vinyl-groove groove-1"></div>
-            <div className="vinyl-groove groove-2"></div>
-            <div className="vinyl-label">
-              <div className="vinyl-core"></div>
-            </div>
+          <div className="welcome-logo-card">
+            <AppLogo size="xl" showText={false} />
           </div>
 
-          {/* Glowing particle micro-orbs */}
+          <div className="welcome-equalizer" aria-hidden="true">
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+          </div>
+          <span className="orbit-note note-1">♪</span>
+          <span className="orbit-note note-2">♫</span>
+          <span className="orbit-note note-3">♬</span>
           <div className="floating-particle p-1"></div>
           <div className="floating-particle p-2"></div>
           <div className="floating-particle p-3"></div>

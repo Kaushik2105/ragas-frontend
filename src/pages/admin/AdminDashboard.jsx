@@ -1,7 +1,7 @@
 import { MessageSquare, Music2, PlayCircle, Users } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Bar, BarChart, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Label, Legend, Line, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import api from '../../api/axios';
 import Loader from '../../components/common/Loader';
 import PageHeader from '../../components/common/PageHeader';
@@ -44,6 +44,8 @@ const AdminDashboard = () => {
   if (loading) return <Loader label="Loading admin dashboard" />;
 
   const stats = dashboard?.stats || {};
+  const totalGenreCount = genres.reduce((total, genre) => total + Number(genre.count || 0), 0);
+  const truncateTick = (value = '') => (value.length > 12 ? `${value.slice(0, 12)}…` : value);
   const cards = [
     { label: 'Users', value: stats.totalUsers || 0, icon: Users },
     { label: 'Songs', value: stats.totalSongs || 0, icon: Music2 },
@@ -67,19 +69,22 @@ const AdminDashboard = () => {
         <div className="panel chart-panel">
           <h2>User growth</h2>
           <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={growth}>
+            <AreaChart data={growth}>
+              <CartesianGrid stroke="rgba(148, 163, 184, 0.12)" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: '#9ca3af', fontSize: 11 }} />
               <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} allowDecimals={false} />
               <Tooltip contentStyle={{ background: '#111827', border: '1px solid #312e81' }} />
-              <Line type="monotone" dataKey="count" stroke="#a855f7" strokeWidth={3} dot={false} />
-            </LineChart>
+              <Legend />
+              <Area type="monotone" dataKey="cumulative" name="Total users" stroke="#a855f7" fill="rgba(168, 85, 247, 0.22)" strokeWidth={3} />
+              <Line type="monotone" dataKey="count" name="New users" stroke="#22d3ee" strokeWidth={2} dot />
+            </AreaChart>
           </ResponsiveContainer>
         </div>
         <div className="panel chart-panel">
           <h2>Top songs</h2>
-          <ResponsiveContainer width="100%" height={260}>
+          <ResponsiveContainer width="100%" height={300}>
             <BarChart data={topSongs}>
-              <XAxis dataKey="title" tick={{ fill: '#9ca3af', fontSize: 11 }} />
+              <XAxis dataKey="title" angle={-35} textAnchor="end" interval={0} tick={{ fill: '#9ca3af', fontSize: 10 }} tickFormatter={truncateTick} height={72} />
               <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} allowDecimals={false} />
               <Tooltip contentStyle={{ background: '#111827', border: '1px solid #312e81' }} />
               <Bar dataKey="play_count" fill="#22d3ee" radius={[8, 8, 0, 0]} />
@@ -92,7 +97,13 @@ const AdminDashboard = () => {
             <PieChart>
               <Pie data={genres} dataKey="count" nameKey="genre" innerRadius={55} outerRadius={90} paddingAngle={4}>
                 {genres.map((item, index) => <Cell key={item.genre} fill={colors[index % colors.length]} />)}
+                <Label position="center" content={() => (
+                  <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" fill="#f8fafc" fontSize="18" fontWeight="800">
+                    {totalGenreCount}
+                  </text>
+                )} />
               </Pie>
+              <Legend />
               <Tooltip contentStyle={{ background: '#111827', border: '1px solid #312e81' }} />
             </PieChart>
           </ResponsiveContainer>

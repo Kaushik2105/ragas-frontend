@@ -1,4 +1,3 @@
-import { Music } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,6 +5,7 @@ import * as z from 'zod';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
+import AppLogo from '../../components/common/AppLogo';
 
 const schema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -42,8 +42,7 @@ const ResetPassword = () => {
     <main className="auth-screen">
       <section className="auth-card">
         <div className="auth-brand">
-          <span className="brand-mark"><Music size={22} /></span>
-          <span>RAGAS</span>
+          <AppLogo />
         </div>
         <h1>Choose a new password</h1>
         <p>Make sure it's strong and unique.</p>

@@ -10,7 +10,9 @@ import { unwrap } from '../../utils/music';
 
 const Playlists = () => {
   const [playlists, setPlaylists] = useState([]);
+  const [publicPlaylists, setPublicPlaylists] = useState([]);
   const [activePlaylist, setActivePlaylist] = useState(null);
+  const [activeTab, setActiveTab] = useState('mine');
   const [name, setName] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -19,7 +21,9 @@ const Playlists = () => {
     setLoading(true);
     try {
       const response = await api.get('/playlists');
+      const publicResponse = await api.get('/playlists/public');
       const data = unwrap(response);
+      setPublicPlaylists(unwrap(publicResponse));
       setPlaylists(data);
       if (data[0]) {
         const detail = await api.get(`/playlists/${data[0].id}`);
@@ -45,6 +49,7 @@ const Playlists = () => {
       const newPlaylist = unwrap(response);
       setPlaylists([newPlaylist, ...playlists]);
       setActivePlaylist(newPlaylist);
+      setActiveTab('mine');
       setName('');
       setIsPublic(false);
       toast.success('Playlist created');
@@ -62,6 +67,10 @@ const Playlists = () => {
     }
   };
 
+  const selectPublicPlaylist = (playlist) => {
+    setActivePlaylist(playlist);
+  };
+
   const removePlaylist = async (playlist) => {
     try {
       await api.delete(`/playlists/${playlist.id}`);
@@ -74,6 +83,7 @@ const Playlists = () => {
   };
 
   const removeSong = async (song) => {
+    if (activeTab !== 'mine') return;
     try {
       await api.delete(`/playlists/${activePlaylist.id}/songs/${song.id}`);
       const response = await api.get(`/playlists/${activePlaylist.id}`);
@@ -98,11 +108,27 @@ const Playlists = () => {
             </label>
             <button className="primary-button" type="submit"><Plus size={17} /> Create</button>
           </form>
+          <div className="tab-row" role="tablist" aria-label="Playlist view">
+            <button className={activeTab === 'mine' ? 'tab-button active' : 'tab-button'} type="button" onClick={() => { setActiveTab('mine'); setActivePlaylist(playlists[0] || null); }}>
+              My Playlists
+            </button>
+            <button className={activeTab === 'public' ? 'tab-button active' : 'tab-button'} type="button" onClick={() => { setActiveTab('public'); setActivePlaylist(publicPlaylists[0] || null); }}>
+              Public Playlists
+            </button>
+          </div>
           <div className="playlist-list">
-            {playlists.map((playlist) => (
-              <button key={playlist.id} type="button" className={activePlaylist?.id === playlist.id ? 'playlist-chip active' : 'playlist-chip'} onClick={() => selectPlaylist(playlist)}>
+            {(activeTab === 'mine' ? playlists : publicPlaylists).map((playlist) => (
+              <button
+                key={playlist.id}
+                type="button"
+                className={activePlaylist?.id === playlist.id ? 'playlist-chip active' : 'playlist-chip'}
+                onClick={() => activeTab === 'mine' ? selectPlaylist(playlist) : selectPublicPlaylist(playlist)}
+              >
                 <span>{playlist.name}</span>
-                {playlist.isPublic ? <Unlock size={15} /> : <Lock size={15} />}
+                <span className="playlist-meta">
+                  {activeTab === 'public' && playlist.owner?.name ? `by ${playlist.owner.name}` : null}
+                  {playlist.isPublic ? <Unlock size={15} /> : <Lock size={15} />}
+                </span>
               </button>
             ))}
           </div>
@@ -114,15 +140,18 @@ const Playlists = () => {
                 <div>
                   <span className="eyebrow">{activePlaylist.isPublic ? 'Public' : 'Private'} playlist</span>
                   <h2>{activePlaylist.name}</h2>
+                  {activeTab === 'public' && activePlaylist.owner?.name && <p>Curated by {activePlaylist.owner.name}</p>}
                 </div>
-                <button className="danger-button" type="button" onClick={() => removePlaylist(activePlaylist)}>
-                  <Trash2 size={17} /> Delete
-                </button>
+                {activeTab === 'mine' && (
+                  <button className="danger-button" type="button" onClick={() => removePlaylist(activePlaylist)}>
+                    <Trash2 size={17} /> Delete
+                  </button>
+                )}
               </div>
               {activePlaylist.songs?.length ? (
                 <div className="song-grid compact">
                   {activePlaylist.songs.map((song) => (
-                    <SongCard key={song.id} song={song} songs={activePlaylist.songs} isFavorite={false} onFavorite={removeSong} />
+                    <SongCard key={song.id} song={song} songs={activePlaylist.songs} isFavorite={false} onFavorite={activeTab === 'mine' ? removeSong : undefined} />
                   ))}
                 </div>
               ) : (

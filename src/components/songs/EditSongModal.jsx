@@ -12,15 +12,18 @@ const EditSongModal = ({ song, onClose, onUpdate }) => {
 
   useEffect(() => {
     if (song) {
-      setForm({
-        title: song.title || '',
-        artist: song.artist || '',
-        album: song.album || '',
-        genre: song.genre || '',
-        duration: song.duration || '',
-      });
-      setAudio(null);
-      setCover(null);
+      const timer = setTimeout(() => {
+        setForm({
+          title: song.title || '',
+          artist: song.artist || '',
+          album: song.album || '',
+          genre: song.genre || '',
+          duration: song.duration || '',
+        });
+        setAudio(null);
+        setCover(null);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [song]);
 

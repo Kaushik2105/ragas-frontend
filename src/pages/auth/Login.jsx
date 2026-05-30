@@ -1,4 +1,3 @@
-import { Music } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
@@ -7,6 +6,7 @@ import * as z from 'zod';
 import { Link } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
+import AppLogo from '../../components/common/AppLogo';
 import useAuthStore from '../../store/authStore';
 
 const schema = z.object({
@@ -28,8 +28,7 @@ const Login = () => {
     <main className="auth-screen">
       <section className="auth-card">
         <div className="auth-brand">
-          <span className="brand-mark"><Music size={22} /></span>
-          <span>RAGAS</span>
+          <AppLogo />
         </div>
         <h1>Log in and press play.</h1>
         <p>Your dark-purple listening room is waiting.</p>

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Howl } from 'howler';
+import api from '../api/axios';
 
 const usePlayerStore = create((set, get) => ({
   currentSong: null,
@@ -66,6 +67,7 @@ const usePlayerStore = create((set, get) => ({
     });
 
     howl.play();
+    api.post(`/songs/${song.id}/play`).catch(() => {});
 
     set({
       currentSong: song,

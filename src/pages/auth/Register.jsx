@@ -1,11 +1,12 @@
-import { Music } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Link, Navigate } from 'react-router-dom';
+import AppLogo from '../../components/common/AppLogo';
 import useAuthStore from '../../store/authStore';
+import { sendWelcomeEmail } from '../../utils/email';
 
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -25,8 +26,7 @@ const Register = () => {
     <main className="auth-screen">
       <section className="auth-card wide">
         <div className="auth-brand">
-          <span className="brand-mark"><Music size={22} /></span>
-          <span>RAGAS</span>
+          <AppLogo />
         </div>
         <h1>Start your collection.</h1>
         <p>Create a listener account and build playlists, favorites, and feedback.</p>
@@ -34,6 +34,7 @@ const Register = () => {
           const result = await registerUser(data);
           if (result?.success) {
             toast.success('Account created. Welcome to RAGAS!');
+            sendWelcomeEmail(result.user || data).catch(() => {});
             navigate('/', { replace: true });
           } else {
             toast.error(result?.message || 'Registration failed');

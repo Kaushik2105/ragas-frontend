@@ -13,6 +13,7 @@ const Home = lazy(() => import('./pages/user/Home'));
 const Search = lazy(() => import('./pages/user/Search'));
 const Favorites = lazy(() => import('./pages/user/Favorites'));
 const Playlists = lazy(() => import('./pages/user/Playlists'));
+const Feedback = lazy(() => import('./pages/user/Feedback'));
 const Profile = lazy(() => import('./pages/user/Profile'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminSongs = lazy(() => import('./pages/admin/AdminSongs'));
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/search" element={<Search />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/playlists" element={<Playlists />} />
+            <Route path="/feedback" element={<Feedback />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
         </Route>

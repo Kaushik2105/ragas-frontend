@@ -52,7 +52,8 @@ api.interceptors.response.use(
       } catch (refreshError) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        localStorage.clear();
+        window.location.href = '/';
         return Promise.reject(refreshError);
       }
     }
