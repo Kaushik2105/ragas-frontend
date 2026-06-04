@@ -80,7 +80,7 @@ const AdminSongs = () => {
   return (
     <section className="page">
       <PageHeader eyebrow="Admin" title="Song management" description="Upload tracks and manage the catalog served to listeners." />
-      <div className="split-grid">
+      <div className="split-grid song-management-grid">
         <form className="panel form-stack" onSubmit={submit}>
           <h2>Upload song</h2>
           <label>Title<input value={form.title} onChange={(event) => updateField('title', event.target.value)} required /></label>
@@ -92,7 +92,7 @@ const AdminSongs = () => {
           <label>Cover image<input type="file" accept="image/*" onChange={(event) => setCover(event.target.files?.[0] || null)} /></label>
           <button className="primary-button" type="submit" disabled={saving}><Upload size={17} /> {saving ? 'Uploading…' : 'Upload song'}</button>
         </form>
-        <div className="panel">
+        <div className="panel catalog-panel">
           <h2>Catalog</h2>
           <div className="admin-song-list">
             {songs.map((song) => (

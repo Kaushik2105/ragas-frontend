@@ -7,12 +7,13 @@ import Loader from '../../components/common/Loader';
 import PageHeader from '../../components/common/PageHeader';
 import { initials, unwrap } from '../../utils/music';
 
-const reactionEmojis = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
+const reactionEmojis = ['\u{1F44D}', '\u2764\uFE0F', '\u{1F602}', '\u{1F62E}', '\u{1F622}', '\u{1F525}'];
 
 const Feedback = () => {
   const [feedback, setFeedback] = useState([]);
   const [songs, setSongs] = useState([]);
   const [songId, setSongId] = useState('');
+  const [feedbackSongFilter, setFeedbackSongFilter] = useState('');
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(true);
@@ -21,8 +22,11 @@ const Feedback = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      const feedbackUrl = feedbackSongFilter
+        ? `/feedback?limit=80&songId=${encodeURIComponent(feedbackSongFilter)}`
+        : '/feedback?limit=80';
       const [feedbackResponse, songsResponse] = await Promise.all([
-        api.get('/feedback?limit=80'),
+        api.get(feedbackUrl),
         api.get('/songs?limit=100'),
       ]);
       const songItems = unwrap(songsResponse).songs || unwrap(songsResponse) || [];
@@ -34,7 +38,7 @@ const Feedback = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [feedbackSongFilter]);
 
   useEffect(() => {
     const timer = setTimeout(load, 0);
@@ -62,19 +66,34 @@ const Feedback = () => {
   };
 
   const react = async (feedbackId, emoji) => {
+    const currentItem = feedback.find((item) => item.id === feedbackId);
+    if (currentItem?.userReaction === emoji) return;
+
     setFeedback((items) => items.map((item) => {
       if (item.id !== feedbackId) return item;
+
+      const previousEmoji = item.userReaction;
+      const reactions = { ...(item.reactions || {}) };
+      if (previousEmoji) {
+        reactions[previousEmoji] = Math.max((Number(reactions[previousEmoji]) || 0) - 1, 0);
+      }
+      reactions[emoji] = (Number(reactions[emoji]) || 0) + 1;
+
       return {
         ...item,
-        reactions: {
-          ...(item.reactions || {}),
-          [emoji]: (Number(item.reactions?.[emoji]) || 0) + 1,
-        },
+        reactions,
+        userReaction: emoji,
       };
     }));
 
     try {
-      await api.post(`/feedback/${feedbackId}/react`, { emoji });
+      const response = await api.post(`/feedback/${feedbackId}/react`, { emoji });
+      const updated = unwrap(response);
+      setFeedback((items) => items.map((item) => (
+        item.id === feedbackId
+          ? { ...item, reactions: updated.reactions || item.reactions, userReaction: updated.userReaction || emoji }
+          : item
+      )));
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not save reaction');
       load();
@@ -86,8 +105,8 @@ const Feedback = () => {
   return (
     <section className="page">
       <PageHeader eyebrow="Community" title="Feedback wall" description="Share what a track made you feel, and react to what other listeners are saying." />
-      <div className="split-grid">
-        <aside className="panel">
+      <div className="split-grid feedback-grid">
+        <aside className="panel feedback-compose-panel">
           <form className="form-stack" onSubmit={submit}>
             <div className="feedback-form-icon"><MessageSquare size={26} /></div>
             <label>
@@ -111,37 +130,57 @@ const Feedback = () => {
               <textarea rows="5" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Drop your listening note..." />
             </label>
             <button className="primary-button" type="submit" disabled={saving || !songs.length}>
-              {saving ? 'Sharing…' : 'Share feedback'}
+              {saving ? 'Sharing...' : 'Share feedback'}
             </button>
           </form>
         </aside>
-        <div className="feedback-list">
-          {feedback.length ? feedback.map((item) => (
-            <article className={`feedback-card ${item.isPinned ? 'pinned' : ''}`} key={item.id}>
-              <div className="feedback-author-row">
-                <span className="avatar small">{initials(item.user?.name || 'Listener')}</span>
-                <div>
-                  <strong>{item.user?.name || 'Listener'}</strong>
-                  <div className="rating-row">
-                    {Array.from({ length: item.rating }).map((_, index) => <Star key={`${item.id}-${index}`} size={15} fill="currentColor" />)}
+
+        <div className="panel feedback-feed-panel">
+          <div className="feedback-filter-row">
+            <h2>Feedback</h2>
+            <select value={feedbackSongFilter} onChange={(event) => setFeedbackSongFilter(event.target.value)}>
+              <option value="">All songs</option>
+              {songs.map((song) => (
+                <option key={song.id} value={song.id}>{song.title} · {song.artist}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="feedback-list scroll-list">
+            {feedback.length ? feedback.map((item) => (
+              <article className={`feedback-card ${item.isPinned ? 'pinned' : ''}`} key={item.id}>
+                <div className="feedback-author-row">
+                  <span className="avatar small">{initials(item.user?.name || 'Listener')}</span>
+                  <div>
+                    <strong>{item.user?.name || 'Listener'}</strong>
+                    <div className="rating-row">
+                      {Array.from({ length: item.rating }).map((_, index) => (
+                        <Star key={`${item.id}-${index}`} size={15} fill="currentColor" />
+                      ))}
+                    </div>
                   </div>
+                  {item.isPinned && <span className="status active"><Pin size={13} /> Pinned</span>}
                 </div>
-                {item.isPinned && <span className="status active"><Pin size={13} /> Pinned</span>}
-              </div>
-              <p>{item.comment || 'No comment left.'}</p>
-              <span className="song-chip"><Music2 size={14} /> {item.song?.title || 'Unknown song'} · {item.song?.artist || 'Unknown artist'}</span>
-              <div className="reaction-row">
-                {reactionEmojis.map((emoji) => (
-                  <button type="button" className="reaction-button" key={emoji} onClick={() => react(item.id, emoji)}>
-                    <span>{emoji}</span>
-                    <small>{Number(item.reactions?.[emoji]) || 0}</small>
-                  </button>
-                ))}
-              </div>
-            </article>
-          )) : (
-            <EmptyState title="No feedback yet" message="Choose a song and start the first conversation." />
-          )}
+                <p>{item.comment || 'No comment left.'}</p>
+                <span className="song-chip"><Music2 size={14} /> {item.song?.title || 'Unknown song'} · {item.song?.artist || 'Unknown artist'}</span>
+                <div className="reaction-row">
+                  {reactionEmojis.map((emoji) => (
+                    <button
+                      type="button"
+                      className={`reaction-button${item.userReaction === emoji ? ' active' : ''}`}
+                      key={emoji}
+                      onClick={() => react(item.id, emoji)}
+                    >
+                      <span>{emoji}</span>
+                      <small>{Number(item.reactions?.[emoji]) || 0}</small>
+                    </button>
+                  ))}
+                </div>
+              </article>
+            )) : (
+              <EmptyState title="No feedback yet" message="Choose a song and start the first conversation." />
+            )}
+          </div>
         </div>
       </div>
     </section>
