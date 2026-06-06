@@ -1,11 +1,17 @@
-import { Heart, ListPlus, Play, Star } from 'lucide-react';
+import { Heart, ListMusic, ListPlus, Play, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { assetUrl, formatDuration } from '../../utils/music';
 import usePlayerStore from '../../store/playerStore';
 
 const SongCard = ({ song, songs = [], isFavorite = false, onFavorite, onAddToPlaylist, onFeedback }) => {
-  const { currentSong, isPlaying, playSong } = usePlayerStore();
+  const { currentSong, isPlaying, playSong, addToQueue } = usePlayerStore();
   const active = currentSong?.id === song.id;
+
+  const queueSong = () => {
+    addToQueue(song);
+    toast.success('Added to queue');
+  };
 
   return (
     <motion.article
@@ -29,6 +35,9 @@ const SongCard = ({ song, songs = [], isFavorite = false, onFavorite, onAddToPla
       </div>
       <div className="song-actions">
         {active && isPlaying && <span className="equalizer" aria-label="Now playing"><i /><i /><i /></span>}
+        <button type="button" className="icon-button" onClick={queueSong} aria-label="Add to queue">
+          <ListMusic size={18} />
+        </button>
         {onFeedback && (
           <button type="button" className="icon-button" onClick={() => onFeedback(song)} aria-label="Add feedback">
             <Star size={18} />

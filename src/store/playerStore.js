@@ -5,6 +5,7 @@ import api from '../api/axios';
 const usePlayerStore = create((set, get) => ({
   currentSong: null,
   playlist: [],
+  queue: [],
   shuffledPlaylist: [],
   currentIndex: -1,
   isPlaying: false,
@@ -79,6 +80,16 @@ const usePlayerStore = create((set, get) => ({
     });
   },
 
+  addToQueue: (song) => {
+    if (!song?.audioUrl) return;
+    set((state) => ({ queue: [...state.queue, song] }));
+  },
+
+  removeFromQueue: (index) =>
+    set((state) => ({ queue: state.queue.filter((_, itemIndex) => itemIndex !== index) })),
+
+  clearQueue: () => set({ queue: [] }),
+
   togglePlay: () => {
     const { howl, isPlaying } = get();
     if (!howl) return;
@@ -91,6 +102,13 @@ const usePlayerStore = create((set, get) => ({
 
   playNext: () => {
     const s = get();
+    if (s.queue.length > 0) {
+      const [nextSong, ...rest] = s.queue;
+      set({ queue: rest });
+      get().playSong(nextSong, s.playlist.length ? s.playlist : [nextSong]);
+      return;
+    }
+
     const activeList = s.isShuffled && s.shuffledPlaylist.length > 0 ? s.shuffledPlaylist : s.playlist;
     if (activeList.length === 0) return;
 

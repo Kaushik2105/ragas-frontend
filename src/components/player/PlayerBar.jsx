@@ -1,10 +1,13 @@
-import { Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2, VolumeX, X } from 'lucide-react';
+import { ListMusic, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { useState } from 'react';
 import { assetUrl, formatDuration } from '../../utils/music';
 import usePlayerStore from '../../store/playerStore';
 
 const PlayerBar = () => {
+  const [showQueue, setShowQueue] = useState(false);
   const {
     currentSong,
+    queue,
     isPlaying,
     duration,
     currentTime,
@@ -21,6 +24,8 @@ const PlayerBar = () => {
     toggleShuffle,
     toggleRepeat,
     cleanup,
+    removeFromQueue,
+    clearQueue,
   } = usePlayerStore();
 
   if (!currentSong) {
@@ -66,6 +71,40 @@ const PlayerBar = () => {
         </div>
       </div>
       <div className="volume-row">
+        <div className="queue-menu-wrap">
+          <button type="button" className={queue.length ? 'active-control' : ''} onClick={() => setShowQueue((open) => !open)} aria-label="Open queue">
+            <ListMusic size={18} />
+          </button>
+          {showQueue && (
+            <div className="queue-popover">
+              <div className="queue-heading">
+                <strong>Queue</strong>
+                <div className="queue-heading-actions">
+                  {queue.length ? <button type="button" onClick={clearQueue}>Clear</button> : null}
+                  <button type="button" className="queue-close-button" onClick={() => setShowQueue(false)} aria-label="Close queue">
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+              {queue.length ? (
+                queue.map((song, index) => (
+                  <div className="queue-item" key={`${song.id}-${index}`}>
+                    <span>{index + 1}</span>
+                    <div>
+                      <strong>{song.title}</strong>
+                      <small>{song.artist}</small>
+                    </div>
+                    <button type="button" onClick={() => removeFromQueue(index)} aria-label={`Remove ${song.title} from queue`}>
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="muted-text">No queued songs yet.</p>
+              )}
+            </div>
+          )}
+        </div>
         <button type="button" onClick={toggleMute} aria-label="Mute">
           {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </button>
