@@ -34,19 +34,40 @@ const FeedbackModal = ({ song, onClose }) => {
   if (!song) return null;
 
   const react = async (feedbackId, emoji) => {
+    const currentItem = feedbacks.find((item) => item.id === feedbackId);
+    const isToggledOff = currentItem?.userReaction === emoji;
+
     setFeedbacks((items) => items.map((item) => {
       if (item.id !== feedbackId) return item;
+
+      const previousEmoji = item.userReaction;
+      const reactions = { ...(item.reactions || {}) };
+      if (previousEmoji) {
+        reactions[previousEmoji] = Math.max((Number(reactions[previousEmoji]) || 0) - 1, 0);
+      }
+      if (!isToggledOff) {
+        reactions[emoji] = (Number(reactions[emoji]) || 0) + 1;
+      }
+
       return {
         ...item,
-        reactions: {
-          ...(item.reactions || {}),
-          [emoji]: (Number(item.reactions?.[emoji]) || 0) + 1,
-        },
+        reactions,
+        userReaction: isToggledOff ? null : emoji,
       };
     }));
 
     try {
-      await api.post(`/feedback/${feedbackId}/react`, { emoji });
+      const response = await api.post(`/feedback/${feedbackId}/react`, { emoji });
+      const updated = unwrap(response);
+      setFeedbacks((items) => items.map((item) => (
+        item.id === feedbackId
+          ? {
+              ...item,
+              reactions: (updated && updated.reactions) || item.reactions,
+              userReaction: (updated && typeof updated.userReaction !== 'undefined') ? updated.userReaction : (isToggledOff ? null : emoji),
+            }
+          : item
+      )));
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not save reaction');
       loadFeedback();
@@ -94,7 +115,12 @@ const FeedbackModal = ({ song, onClose }) => {
               <p>{item.comment || 'No comment left.'}</p>
               <div className="reaction-row">
                 {reactionEmojis.map((emoji) => (
-                  <button type="button" className="reaction-button" key={emoji} onClick={() => react(item.id, emoji)}>
+                  <button
+                    type="button"
+                    className={`reaction-button${item.userReaction === emoji ? ' active' : ''}`}
+                    key={emoji}
+                    onClick={() => react(item.id, emoji)}
+                  >
                     <span>{emoji}</span>
                     <small>{Number(item.reactions?.[emoji]) || 0}</small>
                   </button>

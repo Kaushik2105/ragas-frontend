@@ -30,11 +30,35 @@ const AdminFeedback = () => {
   }, [load]);
 
   const react = async (feedbackId, emoji) => {
+    const currentItem = feedback.find((item) => item.id === feedbackId);
+    const isToggledOff = currentItem?.userReaction === emoji;
+
+    // Optimistic update
+    setFeedback((items) => items.map((item) => {
+      if (item.id !== feedbackId) return item;
+
+      const previousEmoji = item.userReaction;
+      const reactions = { ...(item.reactions || {}) };
+      if (previousEmoji) {
+        reactions[previousEmoji] = Math.max((Number(reactions[previousEmoji]) || 0) - 1, 0);
+      }
+      if (!isToggledOff) {
+        reactions[emoji] = (Number(reactions[emoji]) || 0) + 1;
+      }
+
+      return {
+        ...item,
+        reactions,
+        userReaction: isToggledOff ? null : emoji,
+      };
+    }));
+
     try {
       await api.post(`/feedback/${feedbackId}/react`, { emoji });
       load();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not save reaction');
+      load();
     }
   };
 
@@ -80,7 +104,12 @@ const AdminFeedback = () => {
             <span className="song-chip"><Music2 size={14} /> {item.song?.title || 'Unknown song'} · {item.song?.artist || 'Unknown artist'}</span>
             <div className="reaction-row">
               {reactionEmojis.map((emoji) => (
-                <button type="button" className="reaction-button" key={emoji} onClick={() => react(item.id, emoji)}>
+                <button
+                  type="button"
+                  className={`reaction-button${item.userReaction === emoji ? ' active' : ''}`}
+                  key={emoji}
+                  onClick={() => react(item.id, emoji)}
+                >
                   <span>{emoji}</span>
                   <small>{Number(item.reactions?.[emoji]) || 0}</small>
                 </button>

@@ -67,7 +67,7 @@ const Feedback = () => {
 
   const react = async (feedbackId, emoji) => {
     const currentItem = feedback.find((item) => item.id === feedbackId);
-    if (currentItem?.userReaction === emoji) return;
+    const isToggledOff = currentItem?.userReaction === emoji;
 
     setFeedback((items) => items.map((item) => {
       if (item.id !== feedbackId) return item;
@@ -77,12 +77,14 @@ const Feedback = () => {
       if (previousEmoji) {
         reactions[previousEmoji] = Math.max((Number(reactions[previousEmoji]) || 0) - 1, 0);
       }
-      reactions[emoji] = (Number(reactions[emoji]) || 0) + 1;
+      if (!isToggledOff) {
+        reactions[emoji] = (Number(reactions[emoji]) || 0) + 1;
+      }
 
       return {
         ...item,
         reactions,
-        userReaction: emoji,
+        userReaction: isToggledOff ? null : emoji,
       };
     }));
 
@@ -91,7 +93,11 @@ const Feedback = () => {
       const updated = unwrap(response);
       setFeedback((items) => items.map((item) => (
         item.id === feedbackId
-          ? { ...item, reactions: updated.reactions || item.reactions, userReaction: updated.userReaction || emoji }
+          ? {
+              ...item,
+              reactions: (updated && updated.reactions) || item.reactions,
+              userReaction: (updated && typeof updated.userReaction !== 'undefined') ? updated.userReaction : (isToggledOff ? null : emoji),
+            }
           : item
       )));
     } catch (error) {
