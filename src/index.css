@@ -1521,3 +1521,115 @@ input[type="range"] {
   letter-spacing: 0.05em;
   border-top: 1px solid var(--border);
 }
+
+/* Mobile App Download Promotion CSS */
+.sidebar-promo {
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(34, 211, 238, 0.06));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-promo-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sidebar-promo-text {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.sidebar-promo-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, var(--accent), var(--cyan));
+  color: white;
+  border: 0;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.sidebar-promo-button:hover {
+  opacity: 0.9;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.mobile-promo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.16), rgba(34, 211, 238, 0.08));
+  border: 1px solid rgba(168, 85, 247, 0.24);
+  border-radius: 24px;
+  margin-bottom: 8px;
+}
+
+.promo-banner-content {
+  display: grid;
+  gap: 6px;
+}
+
+.eyebrow-accent {
+  color: var(--pink);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.mobile-promo-banner h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.mobile-promo-banner p {
+  font-size: 0.88rem;
+  color: var(--muted);
+  max-width: 600px;
+}
+
+.promo-banner-btn {
+  white-space: nowrap;
+  padding: 12px 20px !important;
+  font-size: 0.9rem;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 24px rgba(168, 85, 247, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.promo-banner-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(168, 85, 247, 0.3);
+}
+
+@media (max-width: 768px) {
+  .mobile-promo-banner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 16px;
+  }
+  
+  .promo-banner-btn {
+    width: 100%;
+  }
+}

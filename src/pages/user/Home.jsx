@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import EmptyState from '../../components/common/EmptyState';
@@ -76,6 +77,21 @@ const Home = () => {
         title="Your neon listening room"
         description="Featured tracks, fresh uploads, favorites, and feedback stitched into one smooth dashboard."
       />
+      <div className="mobile-promo-banner">
+        <div className="promo-banner-content">
+          <span className="eyebrow-accent">Ragas on the Go</span>
+          <h3>Take your listening room offline</h3>
+          <p>Get the official mobile app for offline downloads, zero-latency playback, and a smooth native listening experience.</p>
+        </div>
+        <a
+          href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v1.0.1/ragasV1.0.1.apk"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="primary-button promo-banner-btn"
+        >
+          <Smartphone size={18} /> Download for Android
+        </a>
+      </div>
       {songs.length === 0 ? (
         <EmptyState title="No songs yet" message="Ask an admin to upload tracks and this page will light up." />
       ) : (

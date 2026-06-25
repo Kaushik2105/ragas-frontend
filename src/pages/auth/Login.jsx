@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -59,6 +60,12 @@ const Login = () => {
           <Link to="/forgot-password" style={{ color: 'var(--muted)', fontWeight: 'normal', fontSize: '0.85rem' }}>Forgot your password?</Link>
         </p>
         <p className="auth-switch">New here? <Link to="/register">Create an account</Link></p>
+        <div style={{ marginTop: '14px', paddingTop: '18px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
+          <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '12px' }}>Want a native experience?</p>
+          <a href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v1.0.1/ragasV1.0.1.apk" target="_blank" rel="noopener noreferrer" className="ghost-button" style={{ width: '100%', textDecoration: 'none' }}>
+            <Smartphone size={18} /> Download the Mobile App
+          </a>
+        </div>
       </section>
     </main>
   );

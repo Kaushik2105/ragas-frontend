@@ -1,4 +1,4 @@
-import { Home, ListMusic, LogOut, Music, Search, Star, User, LayoutDashboard, Mic2, Users, MessageSquare, X } from 'lucide-react';
+import { Home, ListMusic, LogOut, Music, Search, Star, User, LayoutDashboard, Mic2, Users, MessageSquare, X, Smartphone } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import AppLogo from '../common/AppLogo';
 import useAuthStore from '../../store/authStore';
@@ -56,6 +56,19 @@ const Sidebar = () => {
           </NavLink>
         </div>
       )}
+
+      <div className="sidebar-promo">
+        <span className="sidebar-promo-title">Mobile App</span>
+        <p className="sidebar-promo-text">Get Ragas on your phone for a seamless listening experience.</p>
+        <a
+          className="sidebar-promo-button"
+          href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v1.0.1/ragasV1.0.1.apk"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Smartphone size={14} /> Download APK
+        </a>
+      </div>
 
       <div className="sidebar-footer">
         <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/profile" onClick={() => sidebarOpen && toggleSidebar()}>
