@@ -1,18 +1,21 @@
 import { Lock, Plus, Trash2, Unlock } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import EmptyState from '../../components/common/EmptyState';
 import Loader from '../../components/common/Loader';
 import PageHeader from '../../components/common/PageHeader';
 import SongCard from '../../components/songs/SongCard';
-import { unwrap } from '../../utils/music';
+import { formatPlayCount, playlistPlayCount, unwrap } from '../../utils/music';
 
 const Playlists = () => {
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') === 'public' ? 'public' : 'mine';
   const [playlists, setPlaylists] = useState([]);
   const [publicPlaylists, setPublicPlaylists] = useState([]);
   const [activePlaylist, setActivePlaylist] = useState(null);
-  const [activeTab, setActiveTab] = useState('mine');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [name, setName] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -23,9 +26,12 @@ const Playlists = () => {
       const response = await api.get('/playlists');
       const publicResponse = await api.get('/playlists/public');
       const data = unwrap(response);
-      setPublicPlaylists(unwrap(publicResponse));
+      const publicData = unwrap(publicResponse);
+      setPublicPlaylists(publicData);
       setPlaylists(data);
-      if (data[0]) {
+      if (activeTab === 'public') {
+        setActivePlaylist(publicData[0] || null);
+      } else if (data[0]) {
         const detail = await api.get(`/playlists/${data[0].id}`);
         setActivePlaylist(unwrap(detail));
       }
@@ -34,7 +40,7 @@ const Playlists = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeTab]);
 
   useEffect(() => {
     const timer = setTimeout(load, 0);
@@ -126,7 +132,7 @@ const Playlists = () => {
               >
                 <span>{playlist.name}</span>
                 <span className="playlist-meta">
-                  {activeTab === 'public' && playlist.owner?.name ? `by ${playlist.owner.name}` : null}
+                  {activeTab === 'public' ? `${formatPlayCount(playlistPlayCount(playlist))} plays` : null}
                   {playlist.isPublic ? <Unlock size={15} /> : <Lock size={15} />}
                 </span>
               </button>
@@ -140,7 +146,10 @@ const Playlists = () => {
                 <div>
                   <span className="eyebrow">{activePlaylist.isPublic ? 'Public' : 'Private'} playlist</span>
                   <h2>{activePlaylist.name}</h2>
-                  {activeTab === 'public' && activePlaylist.owner?.name && <p>Curated by {activePlaylist.owner.name}</p>}
+                  <p>
+                    {activeTab === 'public' && activePlaylist.owner?.name ? `Curated by ${activePlaylist.owner.name} | ` : ''}
+                    {formatPlayCount(playlistPlayCount(activePlaylist))} total plays
+                  </p>
                 </div>
                 {activeTab === 'mine' && (
                   <button className="danger-button" type="button" onClick={() => removePlaylist(activePlaylist)}>
@@ -151,7 +160,7 @@ const Playlists = () => {
               {activePlaylist.songs?.length ? (
                 <div className="song-grid compact">
                   {activePlaylist.songs.map((song) => (
-                    <SongCard key={song.id} song={song} songs={activePlaylist.songs} isFavorite={false} onFavorite={activeTab === 'mine' ? removeSong : undefined} />
+                    <SongCard key={song.id} song={song} songs={activePlaylist.songs} isFavorite={false} onRemoveFromPlaylist={activeTab === 'mine' ? removeSong : undefined} />
                   ))}
                 </div>
               ) : (

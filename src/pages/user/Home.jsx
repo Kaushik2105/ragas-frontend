@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Smartphone } from 'lucide-react';
+import { ListMusic, Music2, Smartphone } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import EmptyState from '../../components/common/EmptyState';
@@ -9,12 +10,13 @@ import WelcomeAnimation from '../../components/layout/WelcomeAnimation';
 import AddToPlaylistModal from '../../components/songs/AddToPlaylistModal';
 import FeedbackModal from '../../components/songs/FeedbackModal';
 import SongCard from '../../components/songs/SongCard';
-import { getFavoritesSongs, getSongsFromPayload, unwrap } from '../../utils/music';
+import { assetUrl, formatPlayCount, getFavoritesSongs, getSongsFromPayload, playlistPlayCount, unwrap } from '../../utils/music';
 
 const Home = () => {
   const [songs, setSongs] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [playlists, setPlaylists] = useState([]);
+  const [publicPlaylists, setPublicPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedbackSong, setFeedbackSong] = useState(null);
   const [playlistSong, setPlaylistSong] = useState(null);
@@ -22,14 +24,16 @@ const Home = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [songsResponse, favoritesResponse, playlistsResponse] = await Promise.all([
+      const [songsResponse, favoritesResponse, playlistsResponse, publicPlaylistsResponse] = await Promise.all([
         api.get('/songs?limit=30'),
         api.get('/favorites'),
         api.get('/playlists'),
+        api.get('/playlists/public'),
       ]);
       setSongs(getSongsFromPayload(unwrap(songsResponse)));
       setFavorites(unwrap(favoritesResponse));
       setPlaylists(unwrap(playlistsResponse));
+      setPublicPlaylists(unwrap(publicPlaylistsResponse));
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not load your music');
     } finally {
@@ -50,6 +54,7 @@ const Home = () => {
   );
 
   const recentSongs = useMemo(() => [...songs].slice(0, 12), [songs]);
+  const featuredPlaylists = useMemo(() => [...publicPlaylists].slice(0, 5), [publicPlaylists]);
 
   const toggleFavorite = async (song) => {
     try {
@@ -59,7 +64,7 @@ const Home = () => {
         toast.success('Removed from favorites');
       } else {
         await api.post(`/favorites/${song.id}`);
-        setFavorites(getFavoritesSongs(await api.get('/favorites').then(unwrap)));
+        setFavorites(await api.get('/favorites').then(unwrap));
         toast.success('Added to favorites');
       }
     } catch (error) {
@@ -109,8 +114,38 @@ const Home = () => {
             </div>
           </div>
 
+          {featuredPlaylists.length > 0 && (
+            <section className="featured-playlists-section" aria-labelledby="featured-playlists-title">
+              <div className="section-heading-row">
+                <h2 id="featured-playlists-title" className="section-title">Featured Playlists</h2>
+                <Link to="/playlists?tab=public" className="ghost-button see-all-link">See all</Link>
+              </div>
+              <div className="playlist-rail">
+                {featuredPlaylists.map((playlist) => {
+                  const totalPlays = playlistPlayCount(playlist);
+                  const coverSong = playlist.songs?.find((song) => song.coverImage) || playlist.songs?.[0];
+                  return (
+                    <Link key={playlist.id} to="/playlists?tab=public" className="featured-playlist-card">
+                      <div className="playlist-cover">
+                        {coverSong?.coverImage ? <img src={assetUrl(coverSong.coverImage)} alt="" /> : <Music2 size={28} />}
+                      </div>
+                      <div>
+                        <h3>{playlist.name}</h3>
+                        <p>{playlist.owner?.name ? `by ${playlist.owner.name}` : 'Public playlist'}</p>
+                      </div>
+                      <div className="playlist-card-meta">
+                        <span><ListMusic size={14} /> {playlist.songs?.length || 0}</span>
+                        <span>{formatPlayCount(totalPlays)} plays</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           <h2 className="section-title">Featured</h2>
-          <div className="song-grid">
+          <div className="song-grid featured-song-grid">
             {featured.map((song) => (
               <SongCard
                 key={song.id}
@@ -141,7 +176,7 @@ const Home = () => {
         </>
       )}
       <FeedbackModal song={feedbackSong} onClose={() => setFeedbackSong(null)} />
-      <AddToPlaylistModal song={playlistSong} playlists={playlists} onClose={() => setPlaylistSong(null)} />
+      <AddToPlaylistModal song={playlistSong} playlists={playlists} onClose={() => setPlaylistSong(null)} onChange={load} />
     </section>
   );
 };

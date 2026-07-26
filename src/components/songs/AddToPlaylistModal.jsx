@@ -1,27 +1,37 @@
-import { X } from 'lucide-react';
+import { ListPlus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 
-const AddToPlaylistModal = ({ song, playlists = [], onClose }) => {
+const AddToPlaylistModal = ({ song, playlists = [], onClose, onChange }) => {
   const [playlistId, setPlaylistId] = useState(playlists[0]?.id || '');
   const [saving, setSaving] = useState(false);
 
   if (!song) return null;
 
-  const submit = async (event) => {
+  const selectedPlaylist = playlists.find((playlist) => playlist.id === playlistId);
+  const isInSelectedPlaylist = !!selectedPlaylist?.songs?.some((item) => item.id === song.id);
+
+  const changeMembership = async (event) => {
     event.preventDefault();
     if (!playlistId) {
       toast.error('Create a playlist first');
       return;
     }
+
     setSaving(true);
     try {
-      await api.post(`/playlists/${playlistId}/songs`, { songId: song.id });
-      toast.success('Added to playlist');
+      if (isInSelectedPlaylist) {
+        await api.delete(`/playlists/${playlistId}/songs/${song.id}`);
+        toast.success('Removed from playlist');
+      } else {
+        await api.post(`/playlists/${playlistId}/songs`, { songId: song.id });
+        toast.success('Added to playlist');
+      }
+      await onChange?.();
       onClose();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Could not add song');
+      toast.error(error.response?.data?.message || 'Could not update playlist');
     } finally {
       setSaving(false);
     }
@@ -29,7 +39,7 @@ const AddToPlaylistModal = ({ song, playlists = [], onClose }) => {
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <form className="modal-card" onSubmit={submit}>
+      <form className="modal-card" onSubmit={changeMembership}>
         <button className="modal-close" type="button" onClick={onClose} aria-label="Close">
           <X size={18} />
         </button>
@@ -43,8 +53,8 @@ const AddToPlaylistModal = ({ song, playlists = [], onClose }) => {
             ))}
           </select>
         </label>
-        <button className="primary-button" type="submit" disabled={saving || playlists.length === 0}>
-          {saving ? 'Adding…' : 'Add song'}
+        <button className={isInSelectedPlaylist ? 'danger-button' : 'primary-button'} type="submit" disabled={saving || playlists.length === 0}>
+          {saving ? 'Updating...' : isInSelectedPlaylist ? <><Trash2 size={17} /> Remove song</> : <><ListPlus size={17} /> Add song</>}
         </button>
       </form>
     </div>

@@ -16,6 +16,23 @@ export const formatDuration = (seconds = 0) => {
   return `${minutes}:${remainder}`;
 };
 
+export const formatPlayCount = (count = 0) => {
+  const safeCount = Number.isFinite(Number(count)) ? Number(count) : 0;
+  return new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(safeCount);
+};
+
+const numericValue = (...values) => {
+  const value = values.find((item) => item !== undefined && item !== null);
+  return Number.isFinite(Number(value)) ? Number(value) : 0;
+};
+
+export const playlistPlayCount = (playlist = {}) => {
+  if (playlist.totalPlayCount !== undefined || playlist.total_play_count !== undefined) {
+    return numericValue(playlist.totalPlayCount, playlist.total_play_count);
+  }
+  return (playlist.songs || []).reduce((total, song) => total + numericValue(song.playCount, song.play_count), 0);
+};
+
 export const initials = (name = 'MS') =>
   name
     .split(' ')

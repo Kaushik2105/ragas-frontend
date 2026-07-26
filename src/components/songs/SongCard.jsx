@@ -1,10 +1,10 @@
-import { Heart, ListMusic, ListPlus, Play, Star } from 'lucide-react';
+import { Heart, ListMusic, ListPlus, Play, Star, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { assetUrl, formatDuration } from '../../utils/music';
 import usePlayerStore from '../../store/playerStore';
 
-const SongCard = ({ song, songs = [], isFavorite = false, onFavorite, onAddToPlaylist, onFeedback }) => {
+const SongCard = ({ song, songs = [], isFavorite = false, onFavorite, onAddToPlaylist, onFeedback, onRemoveFromPlaylist }) => {
   const { currentSong, isPlaying, playSong, addToQueue } = usePlayerStore();
   const active = currentSong?.id === song.id;
 
@@ -46,6 +46,11 @@ const SongCard = ({ song, songs = [], isFavorite = false, onFavorite, onAddToPla
         {onAddToPlaylist && (
           <button type="button" className="icon-button" onClick={() => onAddToPlaylist(song)} aria-label="Add to playlist">
             <ListPlus size={18} />
+          </button>
+        )}
+        {onRemoveFromPlaylist && (
+          <button type="button" className="icon-button danger-icon" onClick={() => onRemoveFromPlaylist(song)} aria-label="Remove from playlist">
+            <Trash2 size={18} />
           </button>
         )}
         {onFavorite && (
