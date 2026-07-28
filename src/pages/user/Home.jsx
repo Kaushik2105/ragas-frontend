@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ListMusic, Music2, Smartphone } from 'lucide-react';
+import { ListMusic, Music2, Play, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
@@ -10,10 +10,14 @@ import WelcomeAnimation from '../../components/layout/WelcomeAnimation';
 import AddToPlaylistModal from '../../components/songs/AddToPlaylistModal';
 import FeedbackModal from '../../components/songs/FeedbackModal';
 import SongCard from '../../components/songs/SongCard';
-import { assetUrl, formatPlayCount, getFavoritesSongs, getSongsFromPayload, playlistPlayCount, unwrap } from '../../utils/music';
+import usePlayerStore from '../../store/playerStore';
+import { assetUrl, formatPlayCount, getFavoritesSongs, getSongsFromPayload, getTotalSongsFromPayload, playlistPlayCount, unwrap } from '../../utils/music';
 
 const Home = () => {
+  const { playSong } = usePlayerStore();
   const [songs, setSongs] = useState([]);
+  const [totalSongs, setTotalSongs] = useState(0);
+  const [totalPlays, setTotalPlays] = useState(0);
   const [favorites, setFavorites] = useState([]);
   const [playlists, setPlaylists] = useState([]);
   const [publicPlaylists, setPublicPlaylists] = useState([]);
@@ -30,7 +34,10 @@ const Home = () => {
         api.get('/playlists'),
         api.get('/playlists/public'),
       ]);
-      setSongs(getSongsFromPayload(unwrap(songsResponse)));
+      const songsData = unwrap(songsResponse);
+      setSongs(getSongsFromPayload(songsData));
+      setTotalSongs(getTotalSongsFromPayload(songsData));
+      setTotalPlays(songsData?.totalPlayCount || 0);
       setFavorites(unwrap(favoritesResponse));
       setPlaylists(unwrap(playlistsResponse));
       setPublicPlaylists(unwrap(publicPlaylistsResponse));
@@ -72,6 +79,17 @@ const Home = () => {
     }
   };
 
+  const handlePlayPlaylist = (e, playlist) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (playlist.songs && playlist.songs.length > 0) {
+      playSong(playlist.songs[0], playlist.songs);
+      toast.success(`Playing playlist: ${playlist.name}`);
+    } else {
+      toast.error('This playlist has no songs to play');
+    }
+  };
+
   if (loading) return <Loader label="Loading the catalog" />;
 
   return (
@@ -108,9 +126,10 @@ const Home = () => {
               <p>{featured[0] ? `${featured[0].artist} | ${featured[0].genre || 'Genre bending'}` : 'Your top played songs appear here.'}</p>
             </div>
             <div className="stat-strip">
-              <span><strong>{songs.length}</strong> tracks</span>
+              <span><strong>{totalSongs}</strong> tracks</span>
               <span><strong>{favorites.length}</strong> favorites</span>
               <span><strong>{playlists.length}</strong> playlists</span>
+              <span><strong>{formatPlayCount(totalPlays)}</strong> plays</span>
             </div>
           </div>
 
@@ -128,6 +147,14 @@ const Home = () => {
                     <Link key={playlist.id} to="/playlists?tab=public" className="featured-playlist-card">
                       <div className="playlist-cover">
                         {coverSong?.coverImage ? <img src={assetUrl(coverSong.coverImage)} alt="" /> : <Music2 size={28} />}
+                        <button
+                          type="button"
+                          className="playlist-play-button"
+                          onClick={(e) => handlePlayPlaylist(e, playlist)}
+                          aria-label={`Play ${playlist.name}`}
+                        >
+                          <Play size={18} fill="currentColor" />
+                        </button>
                       </div>
                       <div>
                         <h3>{playlist.name}</h3>

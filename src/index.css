@@ -1770,3 +1770,43 @@ input[type="range"] {
     width: 100%;
   }
 }
+
+/* Featured Playlist Play Button Overlay */
+.playlist-cover {
+  position: relative;
+}
+
+.playlist-play-button {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--text);
+  color: #111827;
+  border: none;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.featured-playlist-card:hover .playlist-play-button {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.playlist-play-button:hover {
+  transform: scale(1.1) !important;
+  background: var(--cyan);
+  color: #111827;
+}
+
+.playlist-play-button svg {
+  margin-left: 2px;
+}
