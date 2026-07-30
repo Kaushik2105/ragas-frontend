@@ -9,6 +9,7 @@ import { Navigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import AppLogo from '../../components/common/AppLogo';
 import useAuthStore from '../../store/authStore';
+import { GoogleLogin } from '@react-oauth/google';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -18,7 +19,7 @@ const schema = z.object({
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading, isAuthenticated } = useAuthStore();
+  const { login, googleLogin, isLoading, isAuthenticated } = useAuthStore();
   const from = location.state?.from?.pathname || '/';
 
   const { register, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(schema) });
@@ -59,6 +60,35 @@ const Login = () => {
         <p className="auth-switch" style={{ marginTop: '-8px' }}>
           <Link to="/forgot-password" style={{ color: 'var(--muted)', fontWeight: 'normal', fontSize: '0.85rem' }}>Forgot your password?</Link>
         </p>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px', marginBottom: '16px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%' }}>
+            <span style={{ flex: 1, height: '1px', backgroundColor: 'var(--border)' }}></span>
+            <span style={{ color: 'var(--muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>OR</span>
+            <span style={{ flex: 1, height: '1px', backgroundColor: 'var(--border)' }}></span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', width: '100%', maxWidth: '320px' }}>
+            <GoogleLogin
+              onSuccess={async (credentialResponse) => {
+                const result = await googleLogin(credentialResponse.credential);
+                if (result?.success) {
+                  toast.success('Welcome to RAGAS');
+                  navigate(from, { replace: true });
+                } else {
+                  toast.error(result?.message || 'Google Login failed');
+                }
+              }}
+              onError={() => {
+                toast.error('Google Sign-In failed');
+              }}
+              theme="filled_blue"
+              shape="pill"
+              text="continue_with"
+              width="320"
+            />
+          </div>
+        </div>
+
         <p className="auth-switch">New here? <Link to="/register">Create an account</Link></p>
         <div style={{ marginTop: '14px', paddingTop: '18px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
           <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '12px' }}>Want a native experience?</p>

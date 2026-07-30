@@ -8,7 +8,7 @@ import * as z from 'zod';
 import { Link, Navigate } from 'react-router-dom';
 import AppLogo from '../../components/common/AppLogo';
 import useAuthStore from '../../store/authStore';
-import { sendWelcomeEmail } from '../../utils/email';
+import { GoogleLogin } from '@react-oauth/google';
 
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -22,6 +22,7 @@ const Register = () => {
     requestRegistrationOtp,
     verifyRegistrationOtp,
     register: registerUser,
+    googleLogin,
     isLoading,
     isAuthenticated,
   } = useAuthStore();
@@ -70,7 +71,6 @@ const Register = () => {
     const result = await registerUser({ email, password, verificationToken });
     if (result?.success) {
       toast.success('Account created. Welcome to RAGAS!');
-      sendWelcomeEmail(result.user || getValues()).catch(() => {});
       navigate('/', { replace: true });
     } else {
       toast.error(result?.message || 'Registration failed');
@@ -140,6 +140,37 @@ const Register = () => {
             </>
           )}
         </form>
+
+        {step === 'details' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px', marginBottom: '16px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%' }}>
+              <span style={{ flex: 1, height: '1px', backgroundColor: 'var(--border)' }}></span>
+              <span style={{ color: 'var(--muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>OR</span>
+              <span style={{ flex: 1, height: '1px', backgroundColor: 'var(--border)' }}></span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', width: '100%', maxWidth: '320px' }}>
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  const result = await googleLogin(credentialResponse.credential);
+                  if (result?.success) {
+                    toast.success('Welcome to RAGAS');
+                    navigate('/', { replace: true });
+                  } else {
+                    toast.error(result?.message || 'Google Register failed');
+                  }
+                }}
+                onError={() => {
+                  toast.error('Google Sign-In failed');
+                }}
+                theme="filled_blue"
+                shape="pill"
+                text="continue_with"
+                width="320"
+              />
+            </div>
+          </div>
+        )}
+
         <p className="auth-switch">Already listening? <Link to="/login">Sign in</Link></p>
         <div style={{ marginTop: '14px', paddingTop: '18px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
           <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '12px' }}>Want a native experience?</p>
