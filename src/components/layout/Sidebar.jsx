@@ -62,7 +62,7 @@ const Sidebar = () => {
         <p className="sidebar-promo-text">Get Ragas on your phone for a seamless listening experience.</p>
         <a
           className="sidebar-promo-button"
-          href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v1.0.3/ragas-v1.0.3.apk"
+          href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v1.0.4/ragas-v1.0.4.apk"
           target="_blank"
           rel="noopener noreferrer"
         >
