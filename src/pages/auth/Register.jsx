@@ -174,7 +174,7 @@ const Register = () => {
         <p className="auth-switch">Already listening? <Link to="/login">Sign in</Link></p>
         <div style={{ marginTop: '14px', paddingTop: '18px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
           <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '12px' }}>Want a native experience?</p>
-          <a href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v1.0.4/ragas-v1.0.4.apk" target="_blank" rel="noopener noreferrer" className="ghost-button" style={{ width: '100%', textDecoration: 'none' }}>
+          <a href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v1.0.5/ragas-v1.0.5.apk" target="_blank" rel="noopener noreferrer" className="ghost-button" style={{ width: '100%', textDecoration: 'none' }}>
             <Smartphone size={18} /> Download the Mobile App
           </a>
         </div>
