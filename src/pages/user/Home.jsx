@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ListMusic, Music2, Play, Smartphone } from 'lucide-react';
+import { ListMusic, Music2, Play, Smartphone, Pin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
@@ -11,19 +11,34 @@ import AddToPlaylistModal from '../../components/songs/AddToPlaylistModal';
 import FeedbackModal from '../../components/songs/FeedbackModal';
 import SongCard from '../../components/songs/SongCard';
 import usePlayerStore from '../../store/playerStore';
+import useAuthStore from '../../store/authStore';
 import { assetUrl, formatPlayCount, getFavoritesSongs, getSongsFromPayload, getTotalSongsFromPayload, playlistPlayCount, unwrap } from '../../utils/music';
 
 const Home = () => {
   const { playSong } = usePlayerStore();
+  const { user } = useAuthStore();
   const [songs, setSongs] = useState([]);
   const [totalSongs, setTotalSongs] = useState(0);
   const [totalPlays, setTotalPlays] = useState(0);
   const [favorites, setFavorites] = useState([]);
   const [playlists, setPlaylists] = useState([]);
   const [publicPlaylists, setPublicPlaylists] = useState([]);
+  const [pinnedPlaylistIds, setPinnedPlaylistIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedbackSong, setFeedbackSong] = useState(null);
   const [playlistSong, setPlaylistSong] = useState(null);
+
+  // Sync pinned playlists from localStorage
+  useEffect(() => {
+    if (user?.id) {
+      const storedPins = localStorage.getItem(`pinnedPlaylists_${user.id}`);
+      if (storedPins) {
+        setPinnedPlaylistIds(JSON.parse(storedPins));
+      } else {
+        setPinnedPlaylistIds([]);
+      }
+    }
+  }, [user?.id]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,7 +76,42 @@ const Home = () => {
   );
 
   const recentSongs = useMemo(() => [...songs].slice(0, 12), [songs]);
-  const featuredPlaylists = useMemo(() => [...publicPlaylists].slice(0, 5), [publicPlaylists]);
+  const featuredPlaylists = useMemo(() => {
+    const pinnedList = [];
+    pinnedPlaylistIds.forEach((id) => {
+      const pl = playlists.find((p) => p.id === id) || publicPlaylists.find((p) => p.id === id);
+      if (pl) {
+        pinnedList.push({ ...pl, isPinned: true });
+      }
+    });
+
+    const pinnedSet = new Set(pinnedPlaylistIds);
+    const remainingSlots = 10 - pinnedList.length;
+    const restPublic = publicPlaylists
+      .filter((p) => !pinnedSet.has(p.id))
+      .slice(0, Math.max(0, remainingSlots))
+      .map((p) => ({ ...p, isPinned: false }));
+
+    return [...pinnedList, ...restPublic];
+  }, [playlists, publicPlaylists, pinnedPlaylistIds]);
+
+  const togglePinPlaylist = (playlistId) => {
+    if (!user?.id) return;
+    let nextPins = [...pinnedPlaylistIds];
+    if (pinnedPlaylistIds.includes(playlistId)) {
+      nextPins = nextPins.filter((id) => id !== playlistId);
+      toast.success('Playlist unpinned');
+    } else {
+      if (nextPins.length >= 3) {
+        toast.error('You can only pin up to 3 playlists.');
+        return;
+      }
+      nextPins.push(playlistId);
+      toast.success('Playlist pinned');
+    }
+    setPinnedPlaylistIds(nextPins);
+    localStorage.setItem(`pinnedPlaylists_${user.id}`, JSON.stringify(nextPins));
+  };
 
   const toggleFavorite = async (song) => {
     try {
@@ -144,9 +194,21 @@ const Home = () => {
                   const totalPlays = playlistPlayCount(playlist);
                   const coverSong = playlist.songs?.find((song) => song.coverImage) || playlist.songs?.[0];
                   return (
-                    <Link key={playlist.id} to="/playlists?tab=public" className="featured-playlist-card">
+                    <Link key={playlist.id} to={`/playlists?playlistId=${playlist.id}`} className="featured-playlist-card">
                       <div className="playlist-cover">
                         {coverSong?.coverImage ? <img src={assetUrl(coverSong.coverImage)} alt="" /> : <Music2 size={28} />}
+                        <button
+                          type="button"
+                          className={`playlist-pin-button ${playlist.isPinned ? 'active' : ''}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            togglePinPlaylist(playlist.id);
+                          }}
+                          title={playlist.isPinned ? "Unpin playlist" : "Pin playlist"}
+                        >
+                          <Pin size={13} fill={playlist.isPinned ? "currentColor" : "none"} />
+                        </button>
                         <button
                           type="button"
                           className="playlist-play-button"
