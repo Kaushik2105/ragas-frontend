@@ -1,4 +1,4 @@
-import { Trash2, Upload, Edit } from 'lucide-react';
+import { Trash2, Upload, Edit, Search } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
@@ -15,25 +15,29 @@ const AdminSongs = () => {
   const [editingSong, setEditingSong] = useState(null);
   const [audio, setAudio] = useState(null);
   const [cover, setCover] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (query = '') => {
+    setCatalogLoading(true);
     try {
-      const response = await api.get('/admin/songs?limit=60');
+      const normalizedQuery = query.trim();
+      const response = await api.get('/admin/songs', {
+        params: { limit: 50, search: normalizedQuery || undefined },
+      });
       setSongs(unwrap(response).songs || []);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not load songs');
     } finally {
-      setLoading(false);
+      setCatalogLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(load, 0);
+    const timer = setTimeout(() => load(searchQuery), 250);
     return () => clearTimeout(timer);
-  }, [load]);
+  }, [load, searchQuery]);
 
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
@@ -57,7 +61,7 @@ const AdminSongs = () => {
       setAudio(null);
       setCover(null);
       event.target.reset();
-      load();
+      load(searchQuery);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not upload song');
     } finally {
@@ -69,13 +73,11 @@ const AdminSongs = () => {
     try {
       await api.delete(`/songs/${song.id}`);
       toast.success('Song deleted');
-      load();
+      load(searchQuery);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not delete song');
     }
   };
-
-  if (loading) return <Loader label="Loading song management" />;
 
   return (
     <section className="page">
@@ -94,8 +96,23 @@ const AdminSongs = () => {
         </form>
         <div className="panel catalog-panel">
           <h2>Catalog</h2>
+          <div className="search-box inline" style={{ marginBottom: '12px' }}>
+            <Search size={18} />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search by title, artist, album, or genre"
+            />
+          </div>
           <div className="admin-song-list">
-            {songs.map((song) => (
+            {catalogLoading && songs.length === 0 ? (
+              <Loader label="Loading songs" />
+            ) : songs.length === 0 ? (
+              <p style={{ margin: 0, color: 'var(--muted-text)' }}>
+                {searchQuery ? `No songs matched “${searchQuery}”.` : 'No songs available.'}
+              </p>
+            ) : songs.map((song) => (
               <article className="admin-song-row" key={song.id}>
                 {song.coverImage ? <img src={assetUrl(song.coverImage)} alt="" /> : <div className="cover-fallback small">{song.title?.[0]}</div>}
                 <div>
