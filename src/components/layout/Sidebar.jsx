@@ -1,4 +1,4 @@
-import { Home, ListMusic, LogOut, Music, Search, Star, User, LayoutDashboard, Mic2, Users, MessageSquare, X, Smartphone } from 'lucide-react';
+import { Home, ListMusic, LogOut, Music, Search, Star, User, LayoutDashboard, Mic2, Users, MessageSquare, X, Smartphone, Bell, UserCheck } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import AppLogo from '../common/AppLogo';
 import useAuthStore from '../../store/authStore';
@@ -29,8 +29,14 @@ const Sidebar = () => {
           <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/admin/songs" onClick={() => sidebarOpen && toggleSidebar()}>
             <Mic2 size={18} /> Songs
           </NavLink>
+          <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/admin/artists" onClick={() => sidebarOpen && toggleSidebar()}>
+            <UserCheck size={18} /> Artists
+          </NavLink>
           <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/admin/users" onClick={() => sidebarOpen && toggleSidebar()}>
             <Users size={18} /> Users
+          </NavLink>
+          <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/admin/notifications" onClick={() => sidebarOpen && toggleSidebar()}>
+            <Bell size={18} /> Notifications
           </NavLink>
           <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/admin/feedback" onClick={() => sidebarOpen && toggleSidebar()}>
             <MessageSquare size={18} /> Feedback
@@ -50,6 +56,9 @@ const Sidebar = () => {
           </NavLink>
           <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/playlists" onClick={() => sidebarOpen && toggleSidebar()}>
             <ListMusic size={18} /> Playlists
+          </NavLink>
+          <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/artists" onClick={() => sidebarOpen && toggleSidebar()}>
+            <UserCheck size={18} /> Artists
           </NavLink>
           <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/feedback" onClick={() => sidebarOpen && toggleSidebar()}>
             <MessageSquare size={18} /> Feedback

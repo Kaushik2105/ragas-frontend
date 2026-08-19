@@ -15,10 +15,14 @@ const Favorites = lazy(() => import('./pages/user/Favorites'));
 const Playlists = lazy(() => import('./pages/user/Playlists'));
 const Feedback = lazy(() => import('./pages/user/Feedback'));
 const Profile = lazy(() => import('./pages/user/Profile'));
+const Artists = lazy(() => import('./pages/user/Artists'));
+const ArtistSongs = lazy(() => import('./pages/user/ArtistSongs'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminSongs = lazy(() => import('./pages/admin/AdminSongs'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminFeedback = lazy(() => import('./pages/admin/AdminFeedback'));
+const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
+const AdminArtists = lazy(() => import('./pages/admin/AdminArtists'));
 
 import { Toaster } from 'react-hot-toast';
 
@@ -38,6 +42,8 @@ const App = () => (
             <Route path="/search" element={<Search />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/playlists" element={<Playlists />} />
+            <Route path="/artists" element={<Artists />} />
+            <Route path="/artists/:artistName" element={<ArtistSongs />} />
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
@@ -49,6 +55,8 @@ const App = () => (
             <Route path="/admin/songs" element={<AdminSongs />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/feedback" element={<AdminFeedback />} />
+            <Route path="/admin/notifications" element={<AdminNotifications />} />
+            <Route path="/admin/artists" element={<AdminArtists />} />
           </Route>
         </Route>
 

@@ -23,6 +23,7 @@ const Home = () => {
   const [favorites, setFavorites] = useState([]);
   const [playlists, setPlaylists] = useState([]);
   const [publicPlaylists, setPublicPlaylists] = useState([]);
+  const [topArtists, setTopArtists] = useState([]);
   const [pinnedPlaylistIds, setPinnedPlaylistIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedbackSong, setFeedbackSong] = useState(null);
@@ -43,11 +44,12 @@ const Home = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [songsResponse, favoritesResponse, playlistsResponse, publicPlaylistsResponse] = await Promise.all([
+      const [songsResponse, favoritesResponse, playlistsResponse, publicPlaylistsResponse, artistsResponse] = await Promise.all([
         api.get('/songs?limit=30'),
         api.get('/favorites'),
         api.get('/playlists'),
         api.get('/playlists/public'),
+        api.get('/songs/artists/top?limit=10').catch(() => null),
       ]);
       const songsData = unwrap(songsResponse);
       setSongs(getSongsFromPayload(songsData));
@@ -56,6 +58,9 @@ const Home = () => {
       setFavorites(unwrap(favoritesResponse));
       setPlaylists(unwrap(playlistsResponse));
       setPublicPlaylists(unwrap(publicPlaylistsResponse));
+      if (artistsResponse) {
+        setTopArtists(unwrap(artistsResponse) || []);
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not load your music');
     } finally {
@@ -247,6 +252,36 @@ const Home = () => {
               />
             ))}
           </div>
+
+          {topArtists.length > 0 && (
+            <section className="top-artists-section" aria-labelledby="top-artists-title">
+              <div className="section-heading-row">
+                <h2 id="top-artists-title" className="section-title">Top Artists</h2>
+                <Link to="/artists" className="ghost-button see-all-link">See all</Link>
+              </div>
+              <div className="artist-rail-web">
+                {topArtists.map((artist) => (
+                  <Link
+                    key={artist.name}
+                    to={`/artists/${encodeURIComponent(artist.name)}`}
+                    className="artist-card-web"
+                  >
+                    <div className="artist-avatar-circle">
+                      {artist.imageUrl ? (
+                        <img src={assetUrl(artist.imageUrl)} alt={artist.name} />
+                      ) : (
+                        <span className="artist-avatar-fallback">{artist.name[0]}</span>
+                      )}
+                    </div>
+                    <span className="artist-card-name">{artist.name}</span>
+                    <span className="artist-card-count">
+                      {artist.songCount} {artist.songCount === 1 ? 'song' : 'songs'}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           <h2 className="section-title">Recently added</h2>
           <div className="song-grid compact">
