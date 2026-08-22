@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Bell, Send, Users, User, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Bell, Send, Users, User, CheckCircle2, AlertCircle, Search, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import PageHeader from '../../components/common/PageHeader';
@@ -9,6 +9,7 @@ const AdminNotifications = () => {
   const [targetType, setTargetType] = useState('all'); // 'all' | 'user'
   const [users, setUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [userSearch, setUserSearch] = useState('');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
@@ -19,7 +20,7 @@ const AdminNotifications = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await api.get('/admin/users?limit=100');
+        const response = await api.get('/admin/users?limit=200');
         const data = unwrap(response);
         setUsers(data?.users || []);
       } catch (err) {
@@ -47,6 +48,19 @@ const AdminNotifications = () => {
     fetchLogs();
   }, []);
 
+  const pushReadyUsers = useMemo(() => {
+    return users.filter((u) => !!u.pushToken);
+  }, [users]);
+
+  const filteredUsers = useMemo(() => {
+    if (!userSearch.trim()) return users;
+    return users.filter(
+      (u) =>
+        u.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+        u.email?.toLowerCase().includes(userSearch.toLowerCase())
+    );
+  }, [users, userSearch]);
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!title.trim() || !body.trim()) {
@@ -70,7 +84,20 @@ const AdminNotifications = () => {
       const response = await api.post('/admin/notifications/send', payload);
       const data = unwrap(response);
 
-      toast.success(`Notification sent! (${data.successCount} delivered)`);
+      if (data.totalTargeted === 0) {
+        toast.error(
+          'Target user(s) do not have a push token registered yet in the database.'
+        );
+      } else if (data.successCount === 0 && data.failureCount > 0) {
+        toast.error(
+          `Delivery failed for ${data.failureCount} device(s). Check token validity.`
+        );
+      } else {
+        toast.success(
+          `🚀 Notification dispatched! (${data.successCount} of ${data.totalTargeted} delivered)`
+        );
+      }
+
       setTitle('');
       setBody('');
       setSelectedUserId('');
@@ -87,10 +114,31 @@ const AdminNotifications = () => {
       <PageHeader
         eyebrow="Push Notifications"
         title="Broadcast & Personal Notifications"
-        description="Send push notification messages to all users or specific users directly to their Android/iOS devices."
+        description="Send real-time FCM push notification messages to all users or specific users directly to their Android devices."
       />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginTop: '24px' }}>
+      {/* Push Token Status Banner */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '14px 18px',
+          borderRadius: '16px',
+          background: pushReadyUsers.length > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+          border: `1px solid ${pushReadyUsers.length > 0 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+          margin: '20px 0',
+        }}
+      >
+        <Smartphone size={20} color={pushReadyUsers.length > 0 ? '#10b981' : '#f59e0b'} />
+        <div style={{ fontSize: '0.875rem', color: '#e2e8f0' }}>
+          <strong>Push Status: </strong>
+          {pushReadyUsers.length} of {users.length} users have registered active device push tokens.
+          {pushReadyUsers.length === 0 ? ' (Users will register their tokens automatically upon logging into the mobile app).' : ''}
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
         {/* Form Panel */}
         <div className="glass-card" style={{ padding: '24px' }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '20px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -109,7 +157,7 @@ const AdminNotifications = () => {
                   className={targetType === 'all' ? 'primary-button' : 'secondary-button'}
                   style={{ flex: 1, padding: '10px', fontSize: '0.875rem' }}
                 >
-                  <Users size={16} /> All Users
+                  <Users size={16} /> Broadcast to All ({users.length})
                 </button>
                 <button
                   type="button"
@@ -125,18 +173,41 @@ const AdminNotifications = () => {
             {targetType === 'user' && (
               <div>
                 <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: '8px' }}>
-                  Select User
+                  Select Recipient User
                 </label>
+
+                {/* User Search Box */}
+                <div style={{ position: 'relative', marginBottom: '8px' }}>
+                  <Search size={14} style={{ position: 'absolute', left: '10px', top: '10px', color: '#06b6d4' }} />
+                  <input
+                    type="text"
+                    placeholder="Filter user by name or email..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    style={{
+                      width: '100%',
+                      paddingLeft: '32px',
+                      paddingRight: '10px',
+                      height: '34px',
+                      borderRadius: '8px',
+                      background: '#0f172a',
+                      border: '1px solid #334155',
+                      color: '#fff',
+                      fontSize: '0.8rem',
+                    }}
+                  />
+                </div>
+
                 <select
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
                   className="input-field"
                   style={{ width: '100%', padding: '12px', borderRadius: '12px', background: '#1e1b4b', border: '1px solid #3730a3', color: '#fff' }}
                 >
-                  <option value="">-- Choose User --</option>
-                  {users.map((u) => (
+                  <option value="">-- Choose Recipient ({filteredUsers.length} available) --</option>
+                  {filteredUsers.map((u) => (
                     <option key={u.id} value={u.id}>
-                      {u.name} ({u.email}) {u.pushToken ? '📱 [Push Ready]' : ''}
+                      {u.name} ({u.email}) {u.pushToken ? '📱 [Push Active]' : '⚠️ [No Token]'}
                     </option>
                   ))}
                 </select>
@@ -149,7 +220,7 @@ const AdminNotifications = () => {
               </label>
               <input
                 type="text"
-                placeholder="e.g. New Album Released! 🎵"
+                placeholder="e.g. New Track Alert! 🎵"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="input-field"
@@ -163,7 +234,7 @@ const AdminNotifications = () => {
               </label>
               <textarea
                 rows={4}
-                placeholder="Type your message content here..."
+                placeholder="Type notification message here..."
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 className="input-field"
@@ -177,7 +248,7 @@ const AdminNotifications = () => {
               className="primary-button"
               style={{ width: '100%', padding: '14px', borderRadius: '12px', fontWeight: 600, marginTop: '8px' }}
             >
-              {sending ? 'Sending Notification...' : '🚀 Send Push Notification'}
+              {sending ? 'Dispatching via Firebase FCM...' : '🚀 Send Push Notification'}
             </button>
           </form>
         </div>
@@ -185,7 +256,7 @@ const AdminNotifications = () => {
         {/* Live Preview Panel */}
         <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '20px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Bell size={20} color="#06b6d4" /> Phone Preview Mockup
+            <Bell size={20} color="#06b6d4" /> Live Android Preview
           </h2>
 
           <div style={{ background: '#090d16', borderRadius: '24px', padding: '20px', border: '2px solid #1e293b', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -238,7 +309,7 @@ const AdminNotifications = () => {
                         {log.targetType === 'all' ? 'Broadcast (All)' : 'Single User'}
                       </span>
                     </td>
-                    <td style={{ padding: '12px', fontWeight: 600, color: '#10b981' }}>
+                    <td style={{ padding: '12px', fontWeight: 600, color: log.deliveredCount > 0 ? '#10b981' : '#f59e0b' }}>
                       {log.deliveredCount} devices
                     </td>
                     <td style={{ padding: '12px', color: '#64748b', fontSize: '0.75rem' }}>

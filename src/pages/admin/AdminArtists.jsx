@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { UserCheck, Image, Save, Mic2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { UserCheck, Image, Save, Mic2, Search, ChevronDown, CheckCircle2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import PageHeader from '../../components/common/PageHeader';
@@ -12,6 +12,8 @@ const AdminArtists = () => {
   const [imageUrl, setImageUrl] = useState('');
   const [bio, setBio] = useState('');
   const [saving, setSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(15);
 
   const fetchArtists = async () => {
     setLoading(true);
@@ -58,77 +60,171 @@ const AdminArtists = () => {
     }
   };
 
+  // Filter artists by search query
+  const filteredArtists = useMemo(() => {
+    if (!searchQuery.trim()) return artists;
+    return artists.filter((a) =>
+      a.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+    );
+  }, [artists, searchQuery]);
+
+  // Paginated visible artists (15 initial, +15 on each See More click)
+  const displayedArtists = useMemo(() => {
+    return filteredArtists.slice(0, visibleCount);
+  }, [filteredArtists, visibleCount]);
+
+  const handleSeeMore = () => {
+    setVisibleCount((prev) => prev + 15);
+  };
+
   return (
     <div className="section-container">
       <PageHeader
         eyebrow="Artist Profile Management"
         title="Official Artist Pictures & Details"
-        description="Set and manage official profile images for artists. These images will be displayed in the circular Top Artists section in the mobile app."
+        description="Set and manage official profile images for artists. These images will be displayed in the circular Top Artists section in the mobile app and website."
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginTop: '24px' }}>
         {/* List of Artists */}
         <div className="glass-card" style={{ padding: '24px' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '20px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Mic2 size={20} color="#06b6d4" /> Artists Catalog
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
+              <Mic2 size={20} color="#06b6d4" /> Artists Catalog
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500 }}>
+                ({filteredArtists.length} total)
+              </span>
+            </h2>
+          </div>
+
+          {/* Search Filter Bar */}
+          <div style={{ position: 'relative', marginBottom: '16px' }}>
+            <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#06b6d4' }} />
+            <input
+              type="text"
+              placeholder="Search artists by name..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setVisibleCount(15); // Reset pagination on new search
+              }}
+              className="input-field"
+              style={{
+                width: '100%',
+                paddingLeft: '38px',
+                paddingRight: searchQuery ? '32px' : '12px',
+                height: '40px',
+                borderRadius: '12px',
+                background: '#0f172a',
+                border: '1px solid #334155',
+                color: '#fff',
+                fontSize: '0.875rem',
+              }}
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setVisibleCount(15);
+                }}
+                style={{ position: 'absolute', right: '10px', top: '10px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            ) : null}
+          </div>
 
           {loading ? (
             <p style={{ color: '#94a3b8' }}>Loading artists...</p>
-          ) : !artists.length ? (
-            <p style={{ color: '#64748b' }}>No artists found. Upload songs to populate artists.</p>
+          ) : !filteredArtists.length ? (
+            <p style={{ color: '#64748b' }}>
+              {searchQuery ? `No artists matching "${searchQuery}".` : 'No artists found. Upload songs to populate artists.'}
+            </p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {artists.map((artist) => (
-                <div
-                  key={artist.name}
-                  onClick={() => handleEdit(artist)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 16px',
-                    borderRadius: '16px',
-                    background: selectedArtist?.name === artist.name ? 'rgba(168, 85, 247, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                    border: selectedArtist?.name === artist.name ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.05)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div
-                      style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '50%',
-                        overflow: 'hidden',
-                        background: '#1e293b',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: '2px solid #06b6d4',
-                      }}
-                    >
-                      {artist.imageUrl ? (
-                        <img src={artist.imageUrl} alt={artist.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <Mic2 size={18} color="#94a3b8" />
-                      )}
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 700, color: '#f8fafc' }}>{artist.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                        {artist.imageUrl ? '✅ Custom Image Set' : '⚠️ No Custom Image'}
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {displayedArtists.map((artist) => (
+                  <div
+                    key={artist.name}
+                    onClick={() => handleEdit(artist)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      borderRadius: '16px',
+                      background: selectedArtist?.name === artist.name ? 'rgba(168, 85, 247, 0.2)' : 'rgba(30, 41, 59, 0.5)',
+                      border: selectedArtist?.name === artist.name ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.05)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                      <div
+                        style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '50%',
+                          overflow: 'hidden',
+                          background: '#1e293b',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '2px solid #06b6d4',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {artist.imageUrl ? (
+                          <img src={artist.imageUrl} alt={artist.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <Mic2 size={18} color="#94a3b8" />
+                        )}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {artist.name}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                          {artist.songCount ? `${artist.songCount} songs • ` : ''}
+                          {artist.imageUrl ? '✅ Custom Image Set' : '⚠️ Default Cover'}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <button className="secondary-button" style={{ fontSize: '0.75rem', padding: '6px 12px' }}>
-                    Edit Image
+                    <button className="secondary-button" style={{ fontSize: '0.75rem', padding: '6px 12px', flexShrink: 0, marginLeft: '8px' }}>
+                      Edit Image
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* See More Button */}
+              {visibleCount < filteredArtists.length && (
+                <div style={{ textAlign: 'center', marginTop: '18px' }}>
+                  <button
+                    type="button"
+                    onClick={handleSeeMore}
+                    className="secondary-button"
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      border: '1px solid #06b6d4',
+                      color: '#06b6d4',
+                    }}
+                  >
+                    See More Artists ({displayedArtists.length} of {filteredArtists.length}) <ChevronDown size={16} />
                   </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
 
