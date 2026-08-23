@@ -8,10 +8,12 @@ import Loader from '../../components/common/Loader';
 import PageHeader from '../../components/common/PageHeader';
 import SongCard from '../../components/songs/SongCard';
 import useAuthStore from '../../store/authStore';
+import useUIStore from '../../store/uiStore';
 import { assetUrl, formatPlayCount, playlistPlayCount, unwrap } from '../../utils/music';
 
 const Playlists = () => {
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
+  const { openAuthModal } = useUIStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const playlistIdParam = searchParams.get('playlistId');
   const tabParam = searchParams.get('tab');
@@ -40,24 +42,32 @@ const Playlists = () => {
       } else {
         setPinnedPlaylistIds([]);
       }
+    } else {
+      setPinnedPlaylistIds([]);
     }
   }, [user?.id]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get('/playlists');
-      const publicResponse = await api.get('/playlists/public');
-      const data = unwrap(response);
-      const publicData = unwrap(publicResponse);
-      setPlaylists(data);
-      setPublicPlaylists(publicData);
+      if (isAuthenticated) {
+        const [response, publicResponse] = await Promise.all([
+          api.get('/playlists').catch(() => ({ data: { data: [] } })),
+          api.get('/playlists/public'),
+        ]);
+        setPlaylists(unwrap(response) || []);
+        setPublicPlaylists(unwrap(publicResponse) || []);
+      } else {
+        const publicResponse = await api.get('/playlists/public');
+        setPlaylists([]);
+        setPublicPlaylists(unwrap(publicResponse) || []);
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not load playlists');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     load();
@@ -215,7 +225,18 @@ const Playlists = () => {
         )}
         <div style={{ flex: 1 }} />
         {view !== 'songs' && (
-          <button type="button" className="primary-button create-header-btn" onClick={() => setIsCreateOpen(true)}>
+          <button
+            type="button"
+            className="primary-button create-header-btn"
+            onClick={() => {
+              if (!isAuthenticated) {
+                toast('Sign in to create personal playlists', { icon: '🎵' });
+                openAuthModal('login');
+                return;
+              }
+              setIsCreateOpen(true);
+            }}
+          >
             <Plus size={16} /> Create Playlist
           </button>
         )}
@@ -231,7 +252,18 @@ const Playlists = () => {
           />
 
           <div className="playlists-landing-options">
-            <button type="button" className="landing-option-card create-trigger" onClick={() => setIsCreateOpen(true)}>
+            <button
+              type="button"
+              className="landing-option-card create-trigger"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  toast('Sign in to create personal playlists', { icon: '🎵' });
+                  openAuthModal('login');
+                  return;
+                }
+                setIsCreateOpen(true);
+              }}
+            >
               <div className="option-icon bg-cyan-soft">
                 <Plus size={28} />
               </div>
@@ -241,13 +273,26 @@ const Playlists = () => {
               </div>
             </button>
 
-            <button type="button" className="landing-option-card" onClick={() => { setActiveTab('mine'); setView('mine'); setSearchQuery(''); }}>
+            <button
+              type="button"
+              className="landing-option-card"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  toast('Sign in to access your personal playlists', { icon: '🔒' });
+                  openAuthModal('login');
+                  return;
+                }
+                setActiveTab('mine');
+                setView('mine');
+                setSearchQuery('');
+              }}
+            >
               <div className="option-icon bg-accent-soft">
                 <ListMusic size={28} />
               </div>
               <div className="option-text">
                 <h3>My Playlists</h3>
-                <p>Access your private and public compilations · {playlists.length}</p>
+                <p>{isAuthenticated ? `Access your private and public compilations · ${playlists.length}` : 'Sign in to access your library'}</p>
               </div>
             </button>
 

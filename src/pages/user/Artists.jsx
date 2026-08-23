@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Search, UserCheck, Mic2 } from 'lucide-react';
+import { Search, Mic2, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
@@ -11,6 +11,7 @@ import { assetUrl, unwrap } from '../../utils/music';
 const Artists = () => {
   const [artists, setArtists] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(24);
   const [loading, setLoading] = useState(true);
 
   const fetchArtists = useCallback(async () => {
@@ -34,6 +35,13 @@ const Artists = () => {
     artist.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
   );
 
+  const displayedArtists = filteredArtists.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredArtists.length;
+
+  const handleSeeMore = () => {
+    setVisibleCount((prev) => prev + 24);
+  };
+
   if (loading) return <Loader label="Loading all artists..." />;
 
   return (
@@ -52,14 +60,20 @@ const Artists = () => {
             type="text"
             placeholder="Search artists by name..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setVisibleCount(24);
+            }}
             className="input-field"
             style={{ width: '100%', paddingLeft: '42px', paddingRight: searchQuery ? '36px' : '14px', height: '46px', borderRadius: '14px', background: '#0f172a', border: '1px solid #334155', color: '#fff' }}
           />
           {searchQuery && (
             <button
               type="button"
-              onClick={() => setSearchQuery('')}
+              onClick={() => {
+                setSearchQuery('');
+                setVisibleCount(24);
+              }}
               style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
             >
               ✕
@@ -71,72 +85,95 @@ const Artists = () => {
       {!filteredArtists.length ? (
         <EmptyState title="No artists found" message={searchQuery ? `No artists matching "${searchQuery}".` : 'No artists available yet.'} />
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
-            gap: '24px',
-            marginTop: '24px',
-          }}
-        >
-          {filteredArtists.map((artist) => (
-            <Link
-              key={artist.name}
-              to={`/artists/${encodeURIComponent(artist.name)}`}
-              className="artist-card-web"
-              style={{
-                textDecoration: 'none',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                padding: '16px',
-                borderRadius: '20px',
-                background: 'rgba(15, 23, 42, 0.6)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                transition: 'all 0.25s ease',
-              }}
-            >
-              <div
+        <>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+              gap: '24px',
+              marginTop: '24px',
+            }}
+          >
+            {displayedArtists.map((artist) => (
+              <Link
+                key={artist.name}
+                to={`/artists/${encodeURIComponent(artist.name)}`}
+                className="artist-card-web"
                 style={{
-                  width: '90px',
-                  height: '90px',
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  border: '3px solid #06b6d4',
-                  background: '#0f172a',
+                  textDecoration: 'none',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '10px',
-                  boxShadow: '0 8px 24px rgba(6, 182, 212, 0.25)',
+                  padding: '16px',
+                  borderRadius: '20px',
+                  background: 'rgba(15, 23, 42, 0.6)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  transition: 'all 0.25s ease',
                 }}
               >
-                {artist.imageUrl ? (
-                  <img src={assetUrl(artist.imageUrl)} alt={artist.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <Mic2 size={32} color="#06b6d4" />
-                )}
-              </div>
-              <span
+                <div
+                  style={{
+                    width: '90px',
+                    height: '90px',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    border: '3px solid #06b6d4',
+                    background: '#0f172a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '10px',
+                    boxShadow: '0 8px 24px rgba(6, 182, 212, 0.25)',
+                  }}
+                >
+                  {artist.imageUrl ? (
+                    <img src={assetUrl(artist.imageUrl)} alt={artist.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <Mic2 size={32} color="#06b6d4" />
+                  )}
+                </div>
+                <span
+                  style={{
+                    fontWeight: 700,
+                    fontSize: '0.925rem',
+                    color: '#f8fafc',
+                    textAlign: 'center',
+                    maxWidth: '120px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {artist.name}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center', marginTop: '4px' }}>
+                  {artist.songCount} {artist.songCount === 1 ? 'song' : 'songs'}
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          {hasMore && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '36px', marginBottom: '20px' }}>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={handleSeeMore}
                 style={{
-                  fontWeight: 700,
-                  fontSize: '0.925rem',
-                  color: '#f8fafc',
-                  textAlign: 'center',
-                  maxWidth: '120px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
+                  padding: '12px 32px',
+                  borderRadius: '16px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
                 }}
               >
-                {artist.name}
-              </span>
-              <span style={{ fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center', marginTop: '4px' }}>
-                {artist.songCount} {artist.songCount === 1 ? 'song' : 'songs'}
-              </span>
-            </Link>
-          ))}
-        </div>
+                See More Artists <ChevronDown size={18} />
+              </button>
+            </div>
+          )}
+        </>
       )}
     </section>
   );

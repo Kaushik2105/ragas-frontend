@@ -9,10 +9,14 @@ import SongCard from '../../components/songs/SongCard';
 import AddToPlaylistModal from '../../components/songs/AddToPlaylistModal';
 import FeedbackModal from '../../components/songs/FeedbackModal';
 import { assetUrl, getFavoritesSongs, unwrap } from '../../utils/music';
+import useAuthStore from '../../store/authStore';
+import useUIStore from '../../store/uiStore';
 
 const ArtistSongs = () => {
   const { artistName } = useParams();
   const decodedArtistName = decodeURIComponent(artistName || '');
+  const { isAuthenticated } = useAuthStore();
+  const { openAuthModal } = useUIStore();
   const [songs, setSongs] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +36,7 @@ const ArtistSongs = () => {
     try {
       const [artistRes, favRes, topArtistsRes] = await Promise.all([
         api.get(`/songs/artists/${encodeURIComponent(decodedArtistName)}?page=${targetPage}&limit=10`),
-        append ? Promise.resolve(null) : api.get('/favorites'),
+        append || !isAuthenticated ? Promise.resolve(null) : api.get('/favorites').catch(() => null),
         append ? Promise.resolve(null) : api.get('/songs/artists/top').catch(() => null),
       ]);
 
@@ -48,7 +52,8 @@ const ArtistSongs = () => {
         setSongs((prev) => [...prev, ...newSongs]);
       } else {
         setSongs(newSongs);
-        if (favRes) setFavorites(unwrap(favRes));
+        if (favRes) setFavorites(unwrap(favRes) || []);
+        else if (!isAuthenticated) setFavorites([]);
         if (topArtistsRes) {
           const topList = unwrap(topArtistsRes) || [];
           const matched = topList.find((a) => a.name.toLowerCase().trim() === decodedArtistName.toLowerCase().trim());
@@ -63,7 +68,7 @@ const ArtistSongs = () => {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [decodedArtistName]);
+  }, [decodedArtistName, isAuthenticated]);
 
   useEffect(() => {
     fetchArtistSongs(1, false);
@@ -72,6 +77,11 @@ const ArtistSongs = () => {
   const favoriteIds = useMemo(() => new Set(getFavoritesSongs(favorites).map((s) => s.id)), [favorites]);
 
   const toggleFavorite = async (song) => {
+    if (!isAuthenticated) {
+      toast('Sign in to favorite songs', { icon: '❤️' });
+      openAuthModal('login');
+      return;
+    }
     try {
       if (favoriteIds.has(song.id)) {
         await api.delete(`/favorites/${song.id}`);

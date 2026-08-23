@@ -24,11 +24,15 @@ const AdminFeedback = lazy(() => import('./pages/admin/AdminFeedback'));
 const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
 const AdminArtists = lazy(() => import('./pages/admin/AdminArtists'));
 
+import AuthModal from './components/auth/AuthModal';
+import SharedSongModal from './components/songs/SharedSongModal';
 import { Toaster } from 'react-hot-toast';
 
 const App = () => (
   <>
     <Toaster position="top-right" toastOptions={{ style: { background: '#111827', color: '#f8fafc', border: '1px solid #312e81' } }} />
+    <AuthModal />
+    <SharedSongModal />
     <Suspense fallback={<Loader label="Loading RAGAS" />}>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -36,21 +40,23 @@ const App = () => (
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/search" element={<Search />} />
+        {/* Public / Guest Accessible Layout Routes */}
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/playlists" element={<Playlists />} />
+          <Route path="/artists" element={<Artists />} />
+          <Route path="/artists/:artistName" element={<ArtistSongs />} />
+          <Route path="/feedback" element={<Feedback />} />
+
+          {/* User-Protected Routes */}
+          <Route element={<ProtectedRoute />}>
             <Route path="/favorites" element={<Favorites />} />
-            <Route path="/playlists" element={<Playlists />} />
-            <Route path="/artists" element={<Artists />} />
-            <Route path="/artists/:artistName" element={<ArtistSongs />} />
-            <Route path="/feedback" element={<Feedback />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
-        </Route>
 
-        <Route element={<ProtectedRoute adminOnly />}>
-          <Route element={<AppLayout />}>
+          {/* Admin-Protected Routes */}
+          <Route element={<ProtectedRoute adminOnly />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/songs" element={<AdminSongs />} />
             <Route path="/admin/users" element={<AdminUsers />} />

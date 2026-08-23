@@ -1,12 +1,12 @@
-import { Home, ListMusic, LogOut, Music, Search, Star, User, LayoutDashboard, Mic2, Users, MessageSquare, X, Smartphone, Bell, UserCheck } from 'lucide-react';
+import { Home, ListMusic, LogOut, Music, Search, Star, User, LayoutDashboard, Mic2, Users, MessageSquare, X, Smartphone, Bell, UserCheck, LogIn, UserPlus } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import AppLogo from '../common/AppLogo';
 import useAuthStore from '../../store/authStore';
 import useUIStore from '../../store/uiStore';
 
 const Sidebar = () => {
-  const { user, logout } = useAuthStore();
-  const { sidebarOpen, toggleSidebar } = useUIStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const { sidebarOpen, toggleSidebar, openAuthModal } = useUIStore();
   const isAdmin = user?.role === 'admin';
 
   return (
@@ -51,9 +51,11 @@ const Sidebar = () => {
           <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/search" onClick={() => sidebarOpen && toggleSidebar()}>
             <Search size={18} /> Search
           </NavLink>
-          <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/favorites" onClick={() => sidebarOpen && toggleSidebar()}>
-            <Star size={18} /> Favorites
-          </NavLink>
+          {isAuthenticated && (
+            <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/favorites" onClick={() => sidebarOpen && toggleSidebar()}>
+              <Star size={18} /> Favorites
+            </NavLink>
+          )}
           <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/playlists" onClick={() => sidebarOpen && toggleSidebar()}>
             <ListMusic size={18} /> Playlists
           </NavLink>
@@ -80,16 +82,45 @@ const Sidebar = () => {
       </div>
 
       <div className="sidebar-footer">
-        <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/profile" onClick={() => sidebarOpen && toggleSidebar()}>
-          <User size={18} /> Profile
-        </NavLink>
-        <div className="role-badge">
-          <Music size={14} />
-          <span>{isAdmin ? 'Administrator' : 'Listener'}</span>
-        </div>
-        <button className="logout-button" type="button" onClick={logout}>
-          <LogOut size={16} /> Sign out
-        </button>
+        {isAuthenticated ? (
+          <>
+            <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/profile" onClick={() => sidebarOpen && toggleSidebar()}>
+              <User size={18} /> Profile
+            </NavLink>
+            <div className="role-badge">
+              <Music size={14} />
+              <span>{isAdmin ? 'Administrator' : 'Listener'}</span>
+            </div>
+            <button className="logout-button" type="button" onClick={logout}>
+              <LogOut size={16} /> Sign out
+            </button>
+          </>
+        ) : (
+          <div className="sidebar-guest-footer">
+            <button
+              className="primary-button"
+              type="button"
+              style={{ width: '100%', marginBottom: '8px' }}
+              onClick={() => {
+                if (sidebarOpen) toggleSidebar();
+                openAuthModal('login');
+              }}
+            >
+              <LogIn size={16} /> Sign in
+            </button>
+            <button
+              className="ghost-button"
+              type="button"
+              style={{ width: '100%' }}
+              onClick={() => {
+                if (sidebarOpen) toggleSidebar();
+                openAuthModal('register');
+              }}
+            >
+              <UserPlus size={16} /> Create account
+            </button>
+          </div>
+        )}
       </div>
     </nav>
   );

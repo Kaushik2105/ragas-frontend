@@ -1,15 +1,19 @@
-import { MessageSquare, Music2, Pin, Star } from 'lucide-react';
+import { MessageSquare, Music2, Pin, Star, LogIn } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import EmptyState from '../../components/common/EmptyState';
 import Loader from '../../components/common/Loader';
 import PageHeader from '../../components/common/PageHeader';
+import useAuthStore from '../../store/authStore';
+import useUIStore from '../../store/uiStore';
 import { initials, unwrap } from '../../utils/music';
 
 const reactionEmojis = ['\u{1F44D}', '\u2764\uFE0F', '\u{1F602}', '\u{1F62E}', '\u{1F622}', '\u{1F525}'];
 
 const Feedback = () => {
+  const { isAuthenticated } = useAuthStore();
+  const { openAuthModal } = useUIStore();
   const [feedback, setFeedback] = useState([]);
   const [songs, setSongs] = useState([]);
   const [songId, setSongId] = useState('');
@@ -47,6 +51,11 @@ const Feedback = () => {
 
   const submit = async (event) => {
     event.preventDefault();
+    if (!isAuthenticated) {
+      toast('Sign in to share feedback', { icon: '💬' });
+      openAuthModal('login');
+      return;
+    }
     if (!songId) {
       toast.error('Choose a song first');
       return;
@@ -66,6 +75,11 @@ const Feedback = () => {
   };
 
   const react = async (feedbackId, emoji) => {
+    if (!isAuthenticated) {
+      toast('Sign in to react to feedback', { icon: '💬' });
+      openAuthModal('login');
+      return;
+    }
     const currentItem = feedback.find((item) => item.id === feedbackId);
     const isToggledOff = currentItem?.userReaction === emoji;
 
@@ -113,32 +127,50 @@ const Feedback = () => {
       <PageHeader eyebrow="Community" title="Feedback wall" description="Share what a track made you feel, and react to what other listeners are saying." />
       <div className="split-grid feedback-grid">
         <aside className="panel feedback-compose-panel">
-          <form className="form-stack" onSubmit={submit}>
-            <div className="feedback-form-icon"><MessageSquare size={26} /></div>
-            <label>
-              Song
-              <select value={songId} onChange={(event) => setSongId(event.target.value)}>
-                {songs.map((song) => (
-                  <option key={song.id} value={song.id}>{song.title} · {song.artist}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Rating
-              <select value={rating} onChange={(event) => setRating(Number(event.target.value))}>
-                {[5, 4, 3, 2, 1].map((value) => (
-                  <option key={value} value={value}>{value} star{value > 1 ? 's' : ''}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Feedback
-              <textarea rows="5" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Drop your listening note..." />
-            </label>
-            <button className="primary-button" type="submit" disabled={saving || !songs.length}>
-              {saving ? 'Sharing...' : 'Share feedback'}
-            </button>
-          </form>
+          {isAuthenticated ? (
+            <form className="form-stack" onSubmit={submit}>
+              <div className="feedback-form-icon"><MessageSquare size={26} /></div>
+              <label>
+                Song
+                <select value={songId} onChange={(event) => setSongId(event.target.value)}>
+                  {songs.map((song) => (
+                    <option key={song.id} value={song.id}>{song.title} · {song.artist}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Rating
+                <select value={rating} onChange={(event) => setRating(Number(event.target.value))}>
+                  {[5, 4, 3, 2, 1].map((value) => (
+                    <option key={value} value={value}>{value} star{value > 1 ? 's' : ''}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Feedback
+                <textarea rows="5" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Drop your listening note..." />
+              </label>
+              <button className="primary-button" type="submit" disabled={saving || !songs.length}>
+                {saving ? 'Sharing...' : 'Share feedback'}
+              </button>
+            </form>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '16px 8px' }}>
+              <div className="feedback-form-icon" style={{ margin: '0 auto 16px' }}><MessageSquare size={26} /></div>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>Join the Conversation</h3>
+              <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: '20px', lineHeight: 1.5 }}>
+                Sign in to leave reviews on tracks, rate songs, and react to other music lovers.
+              </p>
+              <button
+                type="button"
+                className="primary-button"
+                style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                onClick={() => openAuthModal('login')}
+              >
+                <LogIn size={16} /> Sign in to post feedback
+              </button>
+            </div>
+          )}
         </aside>
 
         <div className="panel feedback-feed-panel">

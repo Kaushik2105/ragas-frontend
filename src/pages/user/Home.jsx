@@ -12,11 +12,13 @@ import FeedbackModal from '../../components/songs/FeedbackModal';
 import SongCard from '../../components/songs/SongCard';
 import usePlayerStore from '../../store/playerStore';
 import useAuthStore from '../../store/authStore';
+import useUIStore from '../../store/uiStore';
 import { assetUrl, formatPlayCount, getFavoritesSongs, getSongsFromPayload, getTotalSongsFromPayload, playlistPlayCount, unwrap } from '../../utils/music';
 
 const Home = () => {
   const { playSong } = usePlayerStore();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
+  const { openAuthModal } = useUIStore();
   const [songs, setSongs] = useState([]);
   const [totalSongs, setTotalSongs] = useState(0);
   const [totalPlays, setTotalPlays] = useState(0);
@@ -38,35 +40,55 @@ const Home = () => {
       } else {
         setPinnedPlaylistIds([]);
       }
+    } else {
+      setPinnedPlaylistIds([]);
     }
   }, [user?.id]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [songsResponse, favoritesResponse, playlistsResponse, publicPlaylistsResponse, artistsResponse] = await Promise.all([
-        api.get('/songs?limit=30'),
-        api.get('/favorites'),
-        api.get('/playlists'),
-        api.get('/playlists/public'),
-        api.get('/songs/artists/top?limit=10').catch(() => null),
-      ]);
-      const songsData = unwrap(songsResponse);
-      setSongs(getSongsFromPayload(songsData));
-      setTotalSongs(getTotalSongsFromPayload(songsData));
-      setTotalPlays(songsData?.totalPlayCount || 0);
-      setFavorites(unwrap(favoritesResponse));
-      setPlaylists(unwrap(playlistsResponse));
-      setPublicPlaylists(unwrap(publicPlaylistsResponse));
-      if (artistsResponse) {
-        setTopArtists(unwrap(artistsResponse) || []);
+      if (isAuthenticated) {
+        const [songsResponse, favoritesResponse, playlistsResponse, publicPlaylistsResponse, artistsResponse] = await Promise.all([
+          api.get('/songs?limit=30'),
+          api.get('/favorites').catch(() => ({ data: { data: [] } })),
+          api.get('/playlists').catch(() => ({ data: { data: [] } })),
+          api.get('/playlists/public'),
+          api.get('/songs/artists/top?limit=10').catch(() => null),
+        ]);
+        const songsData = unwrap(songsResponse);
+        setSongs(getSongsFromPayload(songsData));
+        setTotalSongs(getTotalSongsFromPayload(songsData));
+        setTotalPlays(songsData?.totalPlayCount || 0);
+        setFavorites(unwrap(favoritesResponse) || []);
+        setPlaylists(unwrap(playlistsResponse) || []);
+        setPublicPlaylists(unwrap(publicPlaylistsResponse) || []);
+        if (artistsResponse) {
+          setTopArtists(unwrap(artistsResponse) || []);
+        }
+      } else {
+        const [songsResponse, publicPlaylistsResponse, artistsResponse] = await Promise.all([
+          api.get('/songs?limit=30'),
+          api.get('/playlists/public'),
+          api.get('/songs/artists/top?limit=10').catch(() => null),
+        ]);
+        const songsData = unwrap(songsResponse);
+        setSongs(getSongsFromPayload(songsData));
+        setTotalSongs(getTotalSongsFromPayload(songsData));
+        setTotalPlays(songsData?.totalPlayCount || 0);
+        setFavorites([]);
+        setPlaylists([]);
+        setPublicPlaylists(unwrap(publicPlaylistsResponse) || []);
+        if (artistsResponse) {
+          setTopArtists(unwrap(artistsResponse) || []);
+        }
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not load your music');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const timer = setTimeout(load, 0);
@@ -101,7 +123,11 @@ const Home = () => {
   }, [playlists, publicPlaylists, pinnedPlaylistIds]);
 
   const togglePinPlaylist = (playlistId) => {
-    if (!user?.id) return;
+    if (!isAuthenticated || !user?.id) {
+      toast('Sign in to pin playlists', { icon: '📌' });
+      openAuthModal('login');
+      return;
+    }
     let nextPins = [...pinnedPlaylistIds];
     if (pinnedPlaylistIds.includes(playlistId)) {
       nextPins = nextPins.filter((id) => id !== playlistId);
@@ -119,6 +145,11 @@ const Home = () => {
   };
 
   const toggleFavorite = async (song) => {
+    if (!isAuthenticated) {
+      toast('Sign in to favorite songs', { icon: '❤️' });
+      openAuthModal('login');
+      return;
+    }
     try {
       if (favoriteIds.has(song.id)) {
         await api.delete(`/favorites/${song.id}`);
@@ -137,6 +168,11 @@ const Home = () => {
   const handlePlayPlaylist = (e, playlist) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAuthenticated) {
+      toast('Sign in to play playlists', { icon: '🎵' });
+      openAuthModal('login');
+      return;
+    }
     if (playlist.songs && playlist.songs.length > 0) {
       playSong(playlist.songs[0], playlist.songs);
       toast.success(`Playing playlist: ${playlist.name}`);

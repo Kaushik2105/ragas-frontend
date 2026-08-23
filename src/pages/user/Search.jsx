@@ -8,8 +8,12 @@ import AddToPlaylistModal from '../../components/songs/AddToPlaylistModal';
 import FeedbackModal from '../../components/songs/FeedbackModal';
 import SongCard from '../../components/songs/SongCard';
 import { getFavoritesSongs, getSongsFromPayload, unwrap } from '../../utils/music';
+import useAuthStore from '../../store/authStore';
+import useUIStore from '../../store/uiStore';
 
 const Search = () => {
+  const { isAuthenticated } = useAuthStore();
+  const { openAuthModal } = useUIStore();
   const [query, setQuery] = useState('');
   const [songs, setSongs] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -19,17 +23,25 @@ const Search = () => {
   const favoriteIds = useMemo(() => new Set(getFavoritesSongs(favorites).map((song) => song.id)), [favorites]);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setFavorites([]);
+      setPlaylists([]);
+      return;
+    }
     const loadBasics = async () => {
       try {
-        const [favoritesResponse, playlistsResponse] = await Promise.all([api.get('/favorites'), api.get('/playlists')]);
-        setFavorites(unwrap(favoritesResponse));
-        setPlaylists(unwrap(playlistsResponse));
+        const [favoritesResponse, playlistsResponse] = await Promise.all([
+          api.get('/favorites').catch(() => ({ data: { data: [] } })),
+          api.get('/playlists').catch(() => ({ data: { data: [] } }))
+        ]);
+        setFavorites(unwrap(favoritesResponse) || []);
+        setPlaylists(unwrap(playlistsResponse) || []);
       } catch (error) {
         toast.error(error.response?.data?.message || 'Could not load library context');
       }
     };
     loadBasics();
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -46,6 +58,11 @@ const Search = () => {
   }, [query]);
 
   const toggleFavorite = async (song) => {
+    if (!isAuthenticated) {
+      toast('Sign in to favorite songs', { icon: '❤️' });
+      openAuthModal('login');
+      return;
+    }
     try {
       if (favoriteIds.has(song.id)) {
         await api.delete(`/favorites/${song.id}`);
