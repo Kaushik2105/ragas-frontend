@@ -198,7 +198,7 @@ const Home = () => {
           <p>Get the official mobile app for offline downloads, zero-latency playback, and a smooth native listening experience.</p>
         </div>
         <a
-          href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v1.0.7/ragas-v1.0.7.apk"
+          href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v2.0.1/ragas-v2.0.1.apk"
           target="_blank"
           rel="noopener noreferrer"
           className="primary-button promo-banner-btn"

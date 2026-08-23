@@ -346,7 +346,7 @@ const AuthModal = () => {
         {/* Download App Footer */}
         <div className="auth-modal-app-footer">
           <a
-            href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v1.0.7/ragas-v1.0.7.apk"
+            href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v2.0.1/ragas-v2.0.1.apk"
             target="_blank"
             rel="noopener noreferrer"
             className="auth-app-download-btn"
