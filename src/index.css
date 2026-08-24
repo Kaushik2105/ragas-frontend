@@ -2787,6 +2787,15 @@ input[type="range"] {
   text-decoration: underline;
 }
 
+.auth-forgot-link {
+  transition: color 0.2s ease;
+}
+
+.auth-forgot-link:hover {
+  color: var(--cyan) !important;
+  text-decoration: underline !important;
+}
+
 .auth-modal-app-footer {
   margin-top: 4px;
   padding-top: 10px;

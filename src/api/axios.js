@@ -1,7 +1,7 @@
 import axios from 'axios';
+import config from '../config';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://ragas-backend-api.onrender.com/api';
+const API_BASE_URL = config.apiBaseUrl;
 
 const api = axios.create({
   baseURL: API_BASE_URL,

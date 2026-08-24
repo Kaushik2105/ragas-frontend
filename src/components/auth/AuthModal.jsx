@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Smartphone, X, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
@@ -8,6 +9,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import AppLogo from '../common/AppLogo';
 import useAuthStore from '../../store/authStore';
 import useUIStore from '../../store/uiStore';
+import config from '../../config';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -168,7 +170,22 @@ const AuthModal = () => {
             </div>
 
             <div className="auth-compact-field">
-              <label>Password</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label>Password</label>
+                <Link
+                  to="/forgot-password"
+                  onClick={handleClose}
+                  className="auth-forgot-link"
+                  style={{
+                    color: 'var(--muted)',
+                    fontSize: '0.74rem',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <input
                 type="password"
                 placeholder="••••••••"
@@ -346,7 +363,7 @@ const AuthModal = () => {
         {/* Download App Footer */}
         <div className="auth-modal-app-footer">
           <a
-            href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v2.0.1/ragas-v2.0.1.apk"
+            href={config.apkDownloadUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="auth-app-download-btn"

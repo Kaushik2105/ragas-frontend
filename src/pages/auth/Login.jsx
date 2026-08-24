@@ -10,6 +10,7 @@ import { useLocation } from 'react-router-dom';
 import AppLogo from '../../components/common/AppLogo';
 import useAuthStore from '../../store/authStore';
 import { GoogleLogin } from '@react-oauth/google';
+import config from '../../config';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -92,7 +93,7 @@ const Login = () => {
         <p className="auth-switch">New here? <Link to="/register">Create an account</Link></p>
         <div style={{ marginTop: '14px', paddingTop: '18px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
           <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '12px' }}>Want a native experience?</p>
-          <a href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v2.0.1/ragas-v2.0.1.apk" target="_blank" rel="noopener noreferrer" className="ghost-button" style={{ width: '100%', textDecoration: 'none' }}>
+          <a href={config.apkDownloadUrl} target="_blank" rel="noopener noreferrer" className="ghost-button" style={{ width: '100%', textDecoration: 'none' }}>
             <Smartphone size={18} /> Download the Mobile App
           </a>
         </div>

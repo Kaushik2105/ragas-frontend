@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Howl } from 'howler';
 import api from '../api/axios';
+import config from '../config';
 
 const usePlayerStore = create((set, get) => ({
   currentSong: null,
@@ -18,9 +19,18 @@ const usePlayerStore = create((set, get) => ({
   howl: null,
   intervalId: null,
 
-  playSong: (song, songList = []) => {
+  playSong: (song, songList = [], isExplicitClick = false) => {
+    if (!song) return;
     const state = get();
-    if (!song?.audioUrl) return;
+
+    // Check if the same song is already loaded
+    if (state.currentSong?.id === song.id && state.howl) {
+      if (!state.isPlaying) {
+        state.howl.play();
+        set({ isPlaying: true });
+      }
+      return;
+    }
 
     // Stop current playback
     if (state.howl) {
@@ -33,8 +43,7 @@ const usePlayerStore = create((set, get) => ({
     const list = songList.length > 0 ? songList : [song];
     const index = list.findIndex((s) => s.id === song.id);
 
-    const apiBaseUrl =
-      import.meta.env.VITE_API_BASE_URL || 'https://ragas-backend-api.onrender.com/api';
+    const apiBaseUrl = config.apiBaseUrl;
     const baseUrl = apiBaseUrl.replace('/api', '');
     const audioSrc = song.audioUrl?.startsWith('http') ? song.audioUrl : `${baseUrl}${song.audioUrl}`;
 

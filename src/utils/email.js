@@ -1,9 +1,10 @@
 import emailjs from '@emailjs/browser';
+import config from '../config';
 
-export const EMAILJS_SERVICE_ID = 'service_assbfr8';
-export const EMAILJS_RESET_TEMPLATE_ID = 'template_2gqin32';
-export const EMAILJS_WELCOME_TEMPLATE_ID = 'template_3lq6w1v';
-export const EMAILJS_PUBLIC_KEY = 'ocRaySd72sJfW-_7m';
+export const EMAILJS_SERVICE_ID = config.emailjsServiceId;
+export const EMAILJS_RESET_TEMPLATE_ID = config.emailjsResetTemplateId;
+export const EMAILJS_WELCOME_TEMPLATE_ID = config.emailjsWelcomeTemplateId;
+export const EMAILJS_PUBLIC_KEY = config.emailjsPublicKey;
 
 const hasEmailConfig = (templateId) =>
   templateId &&

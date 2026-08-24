@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import AppLogo from '../common/AppLogo';
 import useAuthStore from '../../store/authStore';
 import useUIStore from '../../store/uiStore';
+import config from '../../config';
 
 const Sidebar = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -73,7 +74,7 @@ const Sidebar = () => {
         <p className="sidebar-promo-text">Get Ragas on your phone for a seamless listening experience.</p>
         <a
           className="sidebar-promo-button"
-          href="https://github.com/Kaushik2105/Ragas-Mobile/releases/download/v2.0.1/ragas-v2.0.1.apk"
+          href={config.apkDownloadUrl}
           target="_blank"
           rel="noopener noreferrer"
         >
