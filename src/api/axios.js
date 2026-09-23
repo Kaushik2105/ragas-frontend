@@ -4,7 +4,7 @@ import config from '../config';
 const API_BASE_URL = config.apiBaseUrl;
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_BASE_URL || 'https://ragas-backend-api-c7xq.onrender.com/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
