@@ -23,9 +23,11 @@ const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminFeedback = lazy(() => import('./pages/admin/AdminFeedback'));
 const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
 const AdminArtists = lazy(() => import('./pages/admin/AdminArtists'));
+const AdminPopups = lazy(() => import('./pages/admin/AdminPopups'));
 
 import AuthModal from './components/auth/AuthModal';
 import SharedSongModal from './components/songs/SharedSongModal';
+import BroadcastPopupModal from './components/common/BroadcastPopupModal';
 import { Toaster } from 'react-hot-toast';
 
 const App = () => (
@@ -33,6 +35,7 @@ const App = () => (
     <Toaster position="top-right" toastOptions={{ style: { background: '#111827', color: '#f8fafc', border: '1px solid #312e81' } }} />
     <AuthModal />
     <SharedSongModal />
+    <BroadcastPopupModal />
     <Suspense fallback={<Loader label="Loading RAGAS" />}>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -63,6 +66,7 @@ const App = () => (
             <Route path="/admin/feedback" element={<AdminFeedback />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="/admin/artists" element={<AdminArtists />} />
+            <Route path="/admin/popups" element={<AdminPopups />} />
           </Route>
         </Route>
 

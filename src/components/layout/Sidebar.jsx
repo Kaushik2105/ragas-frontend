@@ -1,4 +1,4 @@
-import { Home, ListMusic, LogOut, Music, Search, Star, User, LayoutDashboard, Mic2, Users, MessageSquare, X, Smartphone, Bell, UserCheck, LogIn, UserPlus } from 'lucide-react';
+import { Home, ListMusic, LogOut, Music, Search, Star, User, LayoutDashboard, Mic2, Users, MessageSquare, X, Smartphone, Bell, UserCheck, LogIn, UserPlus, Radio } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import AppLogo from '../common/AppLogo';
 import useAuthStore from '../../store/authStore';
@@ -38,6 +38,9 @@ const Sidebar = () => {
           </NavLink>
           <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/admin/notifications" onClick={() => sidebarOpen && toggleSidebar()}>
             <Bell size={18} /> Notifications
+          </NavLink>
+          <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/admin/popups" onClick={() => sidebarOpen && toggleSidebar()}>
+            <Radio size={18} /> Pop-ups
           </NavLink>
           <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/admin/feedback" onClick={() => sidebarOpen && toggleSidebar()}>
             <MessageSquare size={18} /> Feedback

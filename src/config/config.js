@@ -1,5 +1,5 @@
 const config = {
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://ragas-backend-api.onrender.com/api',
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://ragas-backend-api-c7xq.onrender.com/api',
   googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
   emailjsServiceId: import.meta.env.VITE_EMAILJS_SERVICE_ID || '',
   emailjsResetTemplateId: import.meta.env.VITE_EMAILJS_RESET_TEMPLATE_ID || '',
